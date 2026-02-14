@@ -12,7 +12,9 @@
     "strings": "on"
   },
   // prioritize ArkType's "type" for autoimports
-  "typescript.preferences.autoImportSpecifierExcludeRegexes": ["^(node:)?os$"],
+  "typescript.preferences.autoImportSpecifierExcludeRegexes": [
+    "^(node:)?os$"
+  ],
   "[typescript]": {
     "editor.defaultFormatter": "oxc.oxc-vscode"
   },
@@ -21,5 +23,11 @@
   },
   "oxc.enable": true,
   "oxc.enable.oxfmt": true,
-  "oxc.enable.oxlint": true
+  "oxc.enable.oxlint": true,
+  "chat.tools.terminal.sandbox.enabled": true,
+  "chat.tools.terminal.sandbox.macFileSystem": {
+    "allowWrite": [
+      "."
+    ]
+  }
 }
