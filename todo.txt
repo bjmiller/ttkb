@@ -1,0 +1,4 @@
+(A) 2026-02-13 Do something interesting +code @home
+(B) 2026-02-10 Make followup calls @phone
+(Z) 2026-01-01 Eventual new year's resolution +hope
+x (C) 2026-02-13 2026-02-01 Do the thing +misc

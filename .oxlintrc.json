@@ -1,0 +1,98 @@
+{
+  "extends": [
+    "oxlint/recommended"
+  ],
+  // "jsPlugins": [
+  //   "@stylistic/eslint-plugin"
+  // ],
+  "rules": {
+    "curly": "error",
+    "default-case": "error",
+    // "dot-notation": "error",
+    "eqeqeq": [
+      "error",
+      "always",
+      {
+        "null": "ignore"
+      }
+    ],
+    "global-require": "error",
+    "guard-for-in": "warn",
+    // "@stylistic/max-len": [
+    //   "error",
+    //   {
+    //     "code": 120,
+    //     "ignoreTrailingComments": true,
+    //     "ignoreUrls": true,
+    //     "ignoreTemplateLiterals": true
+    //   }
+    // ],
+    // "new-parens": "error",
+    "no-await-in-loop": "error",
+    // "no-buffer-constructor": "error",
+    // "no-confusing-arrow": "error",
+    "no-console": "warn",
+    "no-duplicate-imports": "error",
+    "no-eval": "error",
+    "no-extra-bind": "warn",
+    // "no-extra-parens": "warn",
+    // "no-floating-decimal": "warn",
+    "no-implicit-coercion": "error",
+    // "no-implicit-globals": "error",
+    "no-implied-eval": "error",
+    "no-lonely-if": "error",
+    "no-loop-func": "error",
+    "no-magic-numbers": [
+      "error",
+      {
+        "ignore": [
+          -1,
+          0,
+          1
+        ],
+        "ignoreArrayIndexes": true,
+        "detectObjects": true
+      }
+    ],
+    "no-misleading-character-class": "error",
+    "no-new": "error",
+    // "no-new-object": "error",
+    "no-new-require": "error",
+    "no-new-wrappers": "error",
+    "no-param-reassign": [
+      "error",
+      {
+        "props": false
+      }
+    ],
+    "no-return-assign": "error",
+    "no-shadow": "error",
+    "no-shadow-restricted-names": "error",
+    "no-template-curly-in-string": "warn",
+    "no-throw-literal": "error",
+    // "no-unmodified-loop-condition": "error",
+    "no-useless-computed-key": "warn",
+    "no-var": "warn",
+    "prefer-const": "error",
+    "prefer-template": "warn",
+    "radix": "error",
+    "require-await": "error",
+    "yoda": "error",
+    "no-unused-vars": "off",
+    "typescript/no-unused-vars": "warn",
+    "typescript/require-await": "off",
+    "typescript/array-type": "off",
+    "typescript/consistent-type-definitions": "off",
+    "typescript/consistent-type-imports": "warn",
+    "typescript/no-require-imports": "off"
+  },
+  "env": {
+    "es2015": true,
+    "browser": true,
+    "node": true
+  },
+  "ignorePatterns": [
+    "dist/*",
+    "node_modules/*"
+  ]
+}
