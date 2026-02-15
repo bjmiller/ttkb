@@ -5,6 +5,7 @@ import { serializeTodoItems } from '../serialize';
 
 const EXPECTED_ITEM_COUNT = 2;
 const SECOND_ITEM_LINE_NUMBER = 4;
+const SECOND_SERIALIZED_LINE_NUMBER = 2;
 
 describe('parseTodoLine', () => {
   it('parses active task with priority and date', () => {
@@ -44,6 +45,16 @@ describe('parseTodoLine', () => {
     }
   });
 
+  it('parses priority from pri tag for completed task', () => {
+    const parsed = parseTodoLine('x 2026-02-13 2026-02-01 Do the thing pri:C owner:me', 1);
+    expect(parsed.kind).toBe('todo');
+
+    if (parsed.kind === 'todo') {
+      expect(parsed.priority).toBe('C');
+      expect(parsed.metadata).toEqual([{ key: 'owner', value: 'me' }]);
+    }
+  });
+
   it('returns unparseable for malformed priority', () => {
     const parsed = parseTodoLine('(AA) invalid priority', 1);
     expect(parsed.kind).toBe('unparseable');
@@ -70,6 +81,24 @@ describe('serializeTodoItems', () => {
     const serialized = serializeTodoItems(parsed);
 
     expect(serialized).toBe(source.join('\n'));
+  });
+
+  it('serializes completed priority as pri tag and active priority as parentheses', () => {
+    const parsed = [
+      parseTodoLine('(A) 2026-02-13 Active task', 1),
+      parseTodoLine('x 2026-02-13 2026-02-01 Done task pri:B', SECOND_SERIALIZED_LINE_NUMBER)
+    ];
+
+    if (parsed[0]?.kind === 'todo') {
+      parsed[0].dirty = true;
+    }
+
+    if (parsed[1]?.kind === 'todo') {
+      parsed[1].dirty = true;
+    }
+
+    const serialized = serializeTodoItems(parsed);
+    expect(serialized).toBe('(A) 2026-02-13 Active task\nx 2026-02-13 2026-02-01 Done task pri:B');
   });
 });
 

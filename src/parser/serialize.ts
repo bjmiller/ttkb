@@ -1,5 +1,7 @@
 import type { ParsedTodoLine, TodoItem } from './types';
 
+const PRIORITY_TAG_KEY = 'pri';
+
 const serializeTodoItem = (item: TodoItem): string => {
   if (!item.dirty) {
     return item.raw;
@@ -11,7 +13,7 @@ const serializeTodoItem = (item: TodoItem): string => {
     segments.push('x');
   }
 
-  if (item.priority) {
+  if (item.priority && !item.completed) {
     segments.push(`(${item.priority})`);
   }
 
@@ -34,7 +36,15 @@ const serializeTodoItem = (item: TodoItem): string => {
   }
 
   for (const metadataTag of item.metadata) {
+    if (metadataTag.key === PRIORITY_TAG_KEY) {
+      continue;
+    }
+
     segments.push(`${metadataTag.key}:${metadataTag.value}`);
+  }
+
+  if (item.completed && item.priority) {
+    segments.push(`${PRIORITY_TAG_KEY}:${item.priority}`);
   }
 
   return segments.join(' ');

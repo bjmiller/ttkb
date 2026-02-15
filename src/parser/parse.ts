@@ -12,6 +12,17 @@ const priorityTokenPattern = /^\(([A-Z])\)$/;
 const projectTagPattern = /^\+([^\s+]+)$/;
 const contextTagPattern = /^@([^\s@]+)$/;
 const metadataTagPattern = /^([A-Za-z][\w-]*):(\S+)$/;
+const PRIORITY_TAG_KEY = 'pri';
+
+const isPriorityTagToken = (token: string): boolean => {
+  const metadataMatch = token.match(metadataTagPattern);
+  if (!metadataMatch) {
+    return false;
+  }
+
+  const [, key, value] = metadataMatch;
+  return Boolean(key && value && key === PRIORITY_TAG_KEY && PRIORITY_PATTERN.test(value));
+};
 
 const makeError = (raw: string, lineNumber: number, error: string): UnparseableTodoItem => ({
   kind: 'unparseable',
@@ -102,6 +113,11 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
     if (metadataMatch) {
       const [, key, value] = metadataMatch;
       if (key && value) {
+        if (!priority && key === PRIORITY_TAG_KEY && PRIORITY_PATTERN.test(value)) {
+          priority = value;
+          continue;
+        }
+
         metadata.push({ key, value });
       }
     }
@@ -112,7 +128,7 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
     lineNumber,
     raw,
     completed,
-    description: descriptionTokens.join(' '),
+    description: descriptionTokens.filter((token) => !isPriorityTagToken(token)).join(' '),
     projects,
     contexts,
     metadata,

@@ -10,7 +10,7 @@ import {
   toggleCompletion,
   toggleDoing
 } from '../mutations';
-import type { TodoItem } from '../../parser';
+import { parseTodoLine, serializeTodoItems, type TodoItem } from '../../parser';
 
 const makeTodo = (partial: Partial<TodoItem> = {}): TodoItem => ({
   kind: 'todo',
@@ -48,6 +48,23 @@ describe('toggleCompletion', () => {
     expect(toggled.completed).toBe(false);
     expect(toggled.completionDate).toBeUndefined();
     expect(toggled.dirty).toBe(true);
+  });
+
+  it('preserves priority and round-trips between pri tag (done) and parentheses (active)', () => {
+    const parsedDone = parseTodoLine('x 2026-02-13 2026-02-01 Done task pri:B', 1);
+    expect(parsedDone.kind).toBe('todo');
+    if (parsedDone.kind !== 'todo') {
+      return;
+    }
+
+    const activated = toggleCompletion(parsedDone);
+    const activeLine = serializeTodoItems([activated]);
+    expect(activeLine).toBe('(B) 2026-02-01 Done task');
+
+    const completedAgain = toggleCompletion(activated);
+    const doneLine = serializeTodoItems([completedAgain]);
+    expect(doneLine).toContain(' pri:B');
+    expect(doneLine).not.toContain('(B)');
   });
 });
 
