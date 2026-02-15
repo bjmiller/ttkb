@@ -98,6 +98,16 @@ export const changePriority = (item: TodoItem, priority: string | undefined): To
     const { priority: _priority, ...withoutPriority } = item;
     return {
       ...withoutPriority,
+      metadata: withoutPriorityTag(item.metadata),
+      dirty: true
+    };
+  }
+
+  if (item.completed) {
+    return {
+      ...item,
+      priority,
+      metadata: withPriorityTag(item.metadata, priority),
       dirty: true
     };
   }
@@ -105,6 +115,7 @@ export const changePriority = (item: TodoItem, priority: string | undefined): To
   return {
     ...item,
     priority,
+    metadata: withoutPriorityTag(item.metadata),
     dirty: true
   };
 };

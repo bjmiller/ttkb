@@ -101,9 +101,38 @@ describe('changePriority', () => {
     expect(changed.dirty).toBe(true);
   });
 
+  it('updates pri metadata when changing completed task priority', () => {
+    const source = makeTodo({
+      completed: true,
+      completionDate: '2026-01-01',
+      metadata: [
+        { key: 'pri', value: 'C' },
+        { key: 'owner', value: 'me' }
+      ]
+    });
+
+    const changed = changePriority(source, 'A');
+    expect(changed.priority).toBe('A');
+    expect(changed.metadata).toEqual([
+      { key: 'owner', value: 'me' },
+      { key: 'pri', value: 'A' }
+    ]);
+    expect(changed.dirty).toBe(true);
+  });
+
   it('clears priority when undefined', () => {
-    const changed = changePriority(makeTodo({ priority: 'C' }), undefined);
+    const changed = changePriority(
+      makeTodo({
+        priority: 'C',
+        metadata: [
+          { key: 'pri', value: 'C' },
+          { key: 'owner', value: 'me' }
+        ]
+      }),
+      undefined
+    );
     expect(changed.priority).toBeUndefined();
+    expect(changed.metadata).toEqual([{ key: 'owner', value: 'me' }]);
     expect(changed.dirty).toBe(true);
   });
 });
