@@ -1,4 +1,4 @@
-import type { TodoItem } from '../parser';
+import type { TodoItem } from '../parser/types';
 
 type DateChanges = {
   creationDate: string | undefined;

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { readTodoFile, writeTodoFileAtomic } from '../logic/persistence';
-import type { ParsedTodoLine, TodoItem, UnparseableTodoItem } from '../parser';
+import type { ParsedTodoLine, TodoItem, UnparseableTodoItem } from '../parser/types';
 
 const byLineNumber = (left: ParsedTodoLine, right: ParsedTodoLine): number => left.lineNumber - right.lineNumber;
 

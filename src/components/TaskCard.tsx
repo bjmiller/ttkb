@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 
-import type { TodoItem } from '../parser';
+import type { TodoItem } from '../parser/types';
 
 type Props = {
   item: TodoItem;

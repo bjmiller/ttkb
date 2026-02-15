@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 
 import { writeTodoFileAtomic, appendLinesToFile, readTodoFile } from '../persistence';
-import { parseTodoLine } from '../../parser';
+import { parseTodoLine } from '../../parser/parse';
 
 const SECOND_LINE_NUMBER = 2;
 

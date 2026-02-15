@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import path from 'node:path';
 import { Box, useApp } from 'ink';
 
-import type { CursorStyle } from '../config';
+import type { CursorStyle } from '../config/types';
 
 import { useCommandBar } from '../hooks/useCommandBar';
 import { useKeyboardCommands } from '../hooks/useKeyboardCommands';

@@ -13,7 +13,7 @@ This application is a terminal app that is intended to display the contents of a
 
 # Checking work
 
-- After every edit, run `bun format && bun lint` to ensure that the code passes static analysis. If the linter returns any errors, fix those errors before handing back control.
+- After every edit, run `bun format && bun lint && bunx tsc --noEmit` to ensure that the code passes static analysis. If the linter or type checker return any errors, fix those errors before handing back control.
 
 # IMPORTANT
 

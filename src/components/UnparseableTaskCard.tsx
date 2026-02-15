@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 
-import type { UnparseableTodoItem } from '../parser';
+import type { UnparseableTodoItem } from '../parser/types';
 
 type Props = {
   item: UnparseableTodoItem;

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'bun:test';
 
 import { buildColumns } from '../columns';
-import type { TodoItem, UnparseableTodoItem } from '../../parser';
+import type { TodoItem, UnparseableTodoItem } from '../../parser/types';
 
 const todo = (partial: Partial<TodoItem> & Pick<TodoItem, 'lineNumber' | 'raw' | 'description'>): TodoItem => {
   const { lineNumber, raw, description, ...overrides } = partial;

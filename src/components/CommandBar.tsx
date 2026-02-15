@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Text } from 'ink';
 
-import type { CursorStyle } from '../config';
+import type { CursorStyle } from '../config/types';
 import type { CommandBarState } from '../hooks/useCommandBar';
 
 type Props = {

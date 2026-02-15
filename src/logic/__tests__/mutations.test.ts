@@ -10,7 +10,9 @@ import {
   toggleCompletion,
   toggleDoing
 } from '../mutations';
-import { parseTodoLine, serializeTodoItems, type TodoItem } from '../../parser';
+import { parseTodoLine } from '../../parser/parse';
+import { serializeTodoItems } from '../../parser/serialize';
+import type { TodoItem } from '../../parser/types';
 
 const makeTodo = (partial: Partial<TodoItem> = {}): TodoItem => ({
   kind: 'todo',

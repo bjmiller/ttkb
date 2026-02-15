@@ -1,7 +1,8 @@
 import React from 'react';
 import { render } from 'ink';
 
-import { loadConfig, type CursorShape, type CursorStyle } from './src/config';
+import { loadConfig } from './src/config/load';
+import type { CursorShape, CursorStyle } from './src/config/types';
 import { App } from './src/components/App';
 import { detectTerminalCursor } from './src/terminal/detectCursor';
 
@@ -31,18 +32,14 @@ const main = async () => {
   enterAlternateScreen();
   const app = render(<App todoFilePath={config.todoFilePath} cursorStyle={resolvedCursorStyle} />);
 
-  const cleanup = () => {
-    leaveAlternateScreen();
-  };
-
   process.on('SIGINT', () => {
-    cleanup();
+    leaveAlternateScreen();
     app.unmount();
     process.exit(0);
   });
 
   await app.waitUntilExit();
-  cleanup();
+  leaveAlternateScreen();
 };
 
 void main();

@@ -1,7 +1,9 @@
 import { rename, unlink } from 'node:fs/promises';
 import path from 'node:path';
 
-import { parseTodoFile, serializeTodoItems, type ParsedTodoLine } from '../parser';
+import { parseTodoFile } from '../parser/parse';
+import { serializeTodoItems } from '../parser/serialize';
+import type { ParsedTodoLine } from '../parser/types';
 
 const HASH_RADIX = 16;
 const HASH_SLICE_START = 2;

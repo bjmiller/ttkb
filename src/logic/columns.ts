@@ -1,4 +1,4 @@
-import type { TodoItem, UnparseableTodoItem } from '../parser';
+import type { TodoItem, UnparseableTodoItem } from '../parser/types';
 
 export type ColumnKey = 'backlog' | 'doing' | 'done';
 
