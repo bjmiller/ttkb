@@ -16,9 +16,10 @@ export const useTodoFile = (filePath: string) => {
   const load = useCallback(async () => {
     try {
       const parsed = await readTodoFile(filePath);
+      const s = parsed.items.length === 1 ? '' : 's';
       const allLines = [...parsed.items, ...parsed.errors].sort(byLineNumber);
       setLines(allLines);
-      setStatus(`Loaded ${parsed.items.length} tasks`);
+      setStatus(`${parsed.items.length} task${s}`);
       setError(undefined);
     } catch (loadError) {
       const message = loadError instanceof Error ? loadError.message : 'Failed to load todo file';
@@ -39,8 +40,7 @@ export const useTodoFile = (filePath: string) => {
 
     try {
       watcher = watch(directory, (_eventType, changedName) => {
-        const normalizedChangedName =
-          typeof changedName === 'string' ? changedName : changedName ? changedName.toString() : undefined;
+        const normalizedChangedName = typeof changedName === 'string' ? changedName : undefined;
 
         if (normalizedChangedName && normalizedChangedName !== targetName) {
           return;
