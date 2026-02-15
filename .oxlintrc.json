@@ -1,7 +1,5 @@
 {
-  "extends": [
-    "oxlint/recommended"
-  ],
+  "extends": ["oxlint/recommended"],
   // "jsPlugins": [
   //   "@stylistic/eslint-plugin"
   // ],
@@ -45,11 +43,7 @@
     "no-magic-numbers": [
       "error",
       {
-        "ignore": [
-          -1,
-          0,
-          1
-        ],
+        "ignore": [-1, 0, 1],
         "ignoreArrayIndexes": true,
         "detectObjects": true
       }
@@ -91,8 +85,5 @@
     "browser": true,
     "node": true
   },
-  "ignorePatterns": [
-    "dist/*",
-    "node_modules/*"
-  ]
+  "ignorePatterns": ["dist/*", "node_modules/*"]
 }
