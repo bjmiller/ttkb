@@ -13,11 +13,27 @@ const withoutStatusDoing = (item: TodoItem): TodoItem['metadata'] => {
   return item.metadata.filter((tag) => !(tag.key === 'status' && tag.value === 'doing'));
 };
 
+const PRIORITY_TAG_KEY = 'pri';
+
+const withoutPriorityTag = (metadata: TodoItem['metadata']): TodoItem['metadata'] => {
+  return metadata.filter((tag) => tag.key !== PRIORITY_TAG_KEY);
+};
+
+const withPriorityTag = (metadata: TodoItem['metadata'], priority: string | undefined): TodoItem['metadata'] => {
+  const withoutPriority = withoutPriorityTag(metadata);
+  if (!priority) {
+    return withoutPriority;
+  }
+
+  return [...withoutPriority, { key: PRIORITY_TAG_KEY, value: priority }];
+};
+
 const hasStatusDoing = (item: TodoItem): boolean => {
   return item.metadata.some((tag) => tag.key === 'status' && tag.value === 'doing');
 };
 
 const STATUS_DOING_TOKEN = 'status:doing';
+const PRIORITY_TAG_TOKEN_PATTERN = /^pri:[A-Z]$/;
 
 const withoutStatusDoingInDescription = (description: string): string => {
   const cleaned = description
@@ -29,11 +45,23 @@ const withoutStatusDoingInDescription = (description: string): string => {
   return cleaned;
 };
 
+const withoutPriorityTagInDescription = (description: string): string => {
+  const cleaned = description
+    .split(/\s+/)
+    .filter((token) => token.length > 0 && !PRIORITY_TAG_TOKEN_PATTERN.test(token))
+    .join(' ')
+    .trim();
+
+  return cleaned;
+};
+
 export const toggleCompletion = (item: TodoItem): TodoItem => {
   if (item.completed) {
     const { completionDate: _completionDate, ...withoutCompletionDate } = item;
     return {
       ...withoutCompletionDate,
+      description: withoutPriorityTagInDescription(item.description),
+      metadata: withoutPriorityTag(item.metadata),
       completed: false,
       dirty: true
     };
@@ -43,7 +71,7 @@ export const toggleCompletion = (item: TodoItem): TodoItem => {
     ...item,
     completed: true,
     completionDate: today(),
-    metadata: withoutStatusDoing(item),
+    metadata: withPriorityTag(withoutStatusDoing(item), item.priority),
     dirty: true
   };
 };

@@ -14,16 +14,6 @@ const contextTagPattern = /^@([^\s@]+)$/;
 const metadataTagPattern = /^([A-Za-z][\w-]*):(\S+)$/;
 const PRIORITY_TAG_KEY = 'pri';
 
-const isPriorityTagToken = (token: string): boolean => {
-  const metadataMatch = token.match(metadataTagPattern);
-  if (!metadataMatch) {
-    return false;
-  }
-
-  const [, key, value] = metadataMatch;
-  return Boolean(key && value && key === PRIORITY_TAG_KEY && PRIORITY_PATTERN.test(value));
-};
-
 const makeError = (raw: string, lineNumber: number, error: string): UnparseableTodoItem => ({
   kind: 'unparseable',
   raw,
@@ -43,7 +33,8 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
   let index = 0;
 
   let completed = false;
-  let priority: string | undefined;
+  let parenthesizedPriority: string | undefined;
+  let priTagPriority: string | undefined;
   let completionDate: string | undefined;
   let creationDate: string | undefined;
 
@@ -59,7 +50,7 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
       return makeError(raw, lineNumber, 'Invalid priority token');
     }
 
-    priority = parsedPriority;
+    parenthesizedPriority = parsedPriority;
     index += 1;
   } else if (priorityToken?.startsWith('(')) {
     return makeError(raw, lineNumber, 'Malformed priority token');
@@ -86,6 +77,7 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
     return makeError(raw, lineNumber, 'Task description is missing');
   }
 
+  const descriptionWords: string[] = [];
   const projects: string[] = [];
   const contexts: string[] = [];
   const metadata: TodoItem['metadata'] = [];
@@ -113,14 +105,20 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
     if (metadataMatch) {
       const [, key, value] = metadataMatch;
       if (key && value) {
-        if (!priority && key === PRIORITY_TAG_KEY && PRIORITY_PATTERN.test(value)) {
-          priority = value;
-          continue;
+        if (!priTagPriority && key === PRIORITY_TAG_KEY && PRIORITY_PATTERN.test(value)) {
+          priTagPriority = value;
         }
 
         metadata.push({ key, value });
+        continue;
       }
     }
+
+    descriptionWords.push(token);
+  }
+
+  if (descriptionWords.length === 0) {
+    return makeError(raw, lineNumber, 'Task description is missing');
   }
 
   const item: TodoItem = {
@@ -128,12 +126,14 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
     lineNumber,
     raw,
     completed,
-    description: descriptionTokens.filter((token) => !isPriorityTagToken(token)).join(' '),
+    description: descriptionWords.join(' '),
     projects,
     contexts,
     metadata,
     dirty: false
   };
+
+  const priority = completed ? priTagPriority : parenthesizedPriority;
 
   if (priority) {
     item.priority = priority;

@@ -27,7 +27,7 @@ describe('parseTodoLine', () => {
 
     if (parsed.kind === 'todo') {
       expect(parsed.completed).toBe(true);
-      expect(parsed.priority).toBe('C');
+      expect(parsed.priority).toBeUndefined();
       expect(parsed.completionDate).toBe('2026-02-13');
       expect(parsed.creationDate).toBe('2026-02-01');
     }
@@ -51,7 +51,21 @@ describe('parseTodoLine', () => {
 
     if (parsed.kind === 'todo') {
       expect(parsed.priority).toBe('C');
-      expect(parsed.metadata).toEqual([{ key: 'owner', value: 'me' }]);
+      expect(parsed.metadata).toEqual([
+        { key: 'pri', value: 'C' },
+        { key: 'owner', value: 'me' }
+      ]);
+    }
+  });
+
+  it('prefers parentheses priority for active tasks even if pri tag exists', () => {
+    const parsed = parseTodoLine('(B) 2026-02-13 Active task pri:C', 1);
+    expect(parsed.kind).toBe('todo');
+
+    if (parsed.kind === 'todo') {
+      expect(parsed.completed).toBe(false);
+      expect(parsed.priority).toBe('B');
+      expect(parsed.metadata).toEqual([{ key: 'pri', value: 'C' }]);
     }
   });
 

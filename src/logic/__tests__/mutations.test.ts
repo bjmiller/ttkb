@@ -30,6 +30,7 @@ const makeTodo = (partial: Partial<TodoItem> = {}): TodoItem => ({
 describe('toggleCompletion', () => {
   it('marks active task as completed and removes status:doing', () => {
     const source = makeTodo({
+      priority: 'B',
       metadata: [
         { key: 'status', value: 'doing' },
         { key: 'owner', value: 'me' }
@@ -39,16 +40,26 @@ describe('toggleCompletion', () => {
     const toggled = toggleCompletion(source);
     expect(toggled.completed).toBe(true);
     expect(toggled.completionDate).toBeDefined();
-    expect(toggled.metadata).toEqual([{ key: 'owner', value: 'me' }]);
+    expect(toggled.metadata).toEqual([
+      { key: 'owner', value: 'me' },
+      { key: 'pri', value: 'B' }
+    ]);
     expect(toggled.dirty).toBe(true);
   });
 
   it('marks completed task as active', () => {
-    const source = makeTodo({ completed: true, completionDate: '2026-01-01' });
+    const source = makeTodo({
+      completed: true,
+      completionDate: '2026-01-01',
+      description: 'Task pri:C',
+      metadata: [{ key: 'pri', value: 'C' }]
+    });
 
     const toggled = toggleCompletion(source);
     expect(toggled.completed).toBe(false);
     expect(toggled.completionDate).toBeUndefined();
+    expect(toggled.description).toBe('Task');
+    expect(toggled.metadata).toEqual([]);
     expect(toggled.dirty).toBe(true);
   });
 
@@ -62,6 +73,7 @@ describe('toggleCompletion', () => {
     const activated = toggleCompletion(parsedDone);
     const activeLine = serializeTodoItems([activated]);
     expect(activeLine).toBe('(B) 2026-02-01 Done task');
+    expect(activated.metadata.some((tag) => tag.key === 'pri')).toBe(false);
 
     const completedAgain = toggleCompletion(activated);
     const doneLine = serializeTodoItems([completedAgain]);
