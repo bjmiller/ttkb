@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import type { AppConfig } from './types';
+import type { AppConfig, AppConfigFile } from './types';
 
 type ResolvedAppConfig = {
   todoFilePath: string;
@@ -120,18 +120,6 @@ const DEFAULT_CONFIG: ResolvedAppConfig = {
   cursorBlink: false
 };
 
-const resolveTodoFilePath = (value: string): string => {
-  if (path.basename(value) === TODO_FILE_NAME) {
-    return value;
-  }
-
-  if (value.endsWith('/') || value.endsWith('\\')) {
-    return path.join(value, TODO_FILE_NAME);
-  }
-
-  return path.join(path.dirname(value), TODO_FILE_NAME);
-};
-
 const resolveTodoFilePathFromDirectory = (directory: string): string => {
   return path.join(directory, TODO_FILE_NAME);
 };
@@ -149,17 +137,17 @@ const sanitizeConfig = (parsed: unknown): ResolvedAppConfig => {
     return DEFAULT_CONFIG;
   }
 
+  const configFile = parsed as AppConfigFile;
+
   const todoFilePath =
-    typeof parsed.todoDirectoryPath === 'string'
-      ? resolveTodoFilePathFromDirectory(parsed.todoDirectoryPath)
-      : typeof parsed.todoFilePath === 'string'
-        ? resolveTodoFilePath(parsed.todoFilePath)
-        : DEFAULT_CONFIG.todoFilePath;
+    typeof configFile.todoDirectoryPath === 'string'
+      ? resolveTodoFilePathFromDirectory(configFile.todoDirectoryPath)
+      : DEFAULT_CONFIG.todoFilePath;
 
   return {
     todoFilePath,
-    cursorStyle: isCursorStyle(parsed.cursorStyle) ? parsed.cursorStyle : DEFAULT_CONFIG.cursorStyle,
-    cursorBlink: typeof parsed.cursorBlink === 'boolean' ? parsed.cursorBlink : DEFAULT_CONFIG.cursorBlink
+    cursorStyle: isCursorStyle(configFile.cursorStyle) ? configFile.cursorStyle : DEFAULT_CONFIG.cursorStyle,
+    cursorBlink: typeof configFile.cursorBlink === 'boolean' ? configFile.cursorBlink : DEFAULT_CONFIG.cursorBlink
   };
 };
 

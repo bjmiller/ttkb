@@ -18,10 +18,9 @@ Supported filenames/formats:
 - `config.yml`
 - `config.toml`
 
-### Keys
+### Configuration options
 
 - `todoDirectoryPath` (string): directory containing your `todo.txt`. ttkb always uses `todo.txt` as the filename.
-- `todoFilePath` (string): optional legacy path value. If set to a non-`todo.txt` filename, ttkb will still use `todo.txt` in that same directory.
 - `cursorStyle` (string): cursor rendering mode for command input.
   - `native` (default): best-effort native terminal behavior.
   - `block`
@@ -45,3 +44,32 @@ If `cursorBlink` is set, it overrides detected/default blink behavior.
 ```
 
 `done.txt` is always written in the same directory as the resolved `todo.txt`.
+
+## Commands
+
+### Navigation
+
+- `↑` / `↓` / `←` / `→`: move selection across tasks and columns
+
+### Task actions
+
+- `a`: add a task
+- `e`: edit selected task description
+- `;`: edit selected task dates
+  - active task: edit created date
+  - done task: edit completed date; press `Tab` to switch between completed/created date
+- `p`: set/clear selected task priority
+- `x`: toggle completion (backlog/doing ↔ done)
+- `d`: toggle selected active task between backlog and doing
+- `Delete` (or `Ctrl+D` in terminals that map forward delete): delete selected task with confirmation
+- `c`: move all completed tasks from `todo.txt` to `done.txt`
+
+### Search and overlays
+
+- `f`: open filter prompt; `Esc` clears active filter
+- `?`: show help overlay
+
+### Other commands
+
+- `Esc`: cancel current prompt/confirmation
+- `Shift+Q`: open quit confirmation
