@@ -10,7 +10,7 @@ type Props = {
 
 export const TaskCard = ({ item, selected }: Props) => {
   const borderColor = selected ? 'greenBright' : 'white';
-  const borderStyle = selected ? 'bold' : 'round';
+  const borderStyle = selected ? 'bold' : 'single';
 
   return (
     <Box borderStyle={borderStyle} borderColor={borderColor} paddingX={1} flexDirection="column" marginBottom={0}>
