@@ -6,7 +6,7 @@ import { App } from './src/components/App';
 import { detectTerminalCursor } from './src/terminal/detectCursor';
 
 const enterAlternateScreen = () => {
-  process.stdout.write('\u001b[?1049h');
+  process.stdout.write('\u001b[?1049h\u001b[2J\u001b[H');
 };
 
 const leaveAlternateScreen = () => {
