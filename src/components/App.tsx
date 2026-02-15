@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import path from 'node:path';
-import { Box, Spacer, useApp } from 'ink';
+import { Box, useApp } from 'ink';
 
 import type { CursorStyle } from '../config';
 
@@ -283,7 +283,7 @@ export const App = ({ todoFilePath, cursorStyle }: Props) => {
   });
 
   return (
-    <Box flexDirection="column" height="100%">
+    <Box flexDirection="column" height={terminalHeight}>
       <ColumnLayout
         columns={columns}
         selectedColumn={selection.selectedColumnKey}
@@ -291,7 +291,6 @@ export const App = ({ todoFilePath, cursorStyle }: Props) => {
         scrollOffset={scrollOffset}
         visibleCount={visibleCount}
       />
-      <Spacer />
       {commandBar.state.mode === 'help' ? <HelpOverlay /> : null}
       <CommandBar
         state={commandBar.state}
