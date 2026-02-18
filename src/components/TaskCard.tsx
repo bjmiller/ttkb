@@ -3,12 +3,12 @@ import { Box, Text } from 'ink';
 
 import type { TodoItem } from '../parser/types';
 
-type Props = {
+type TaskCardProps = {
   item: TodoItem;
   selected: boolean;
 };
 
-export const TaskCard = ({ item, selected }: Props) => {
+export const TaskCard = ({ item, selected }: TaskCardProps) => {
   const borderColor = selected ? 'greenBright' : 'white';
   const borderStyle = selected ? 'bold' : 'single';
 

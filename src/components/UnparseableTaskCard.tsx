@@ -3,12 +3,12 @@ import { Box, Text } from 'ink';
 
 import type { UnparseableTodoItem } from '../parser/types';
 
-type Props = {
+type UnparseableTaskCardProps = {
   item: UnparseableTodoItem;
   selected: boolean;
 };
 
-export const UnparseableTaskCard = ({ item, selected }: Props) => {
+export const UnparseableTaskCard = ({ item, selected }: UnparseableTaskCardProps) => {
   return (
     <Box
       borderStyle="round"

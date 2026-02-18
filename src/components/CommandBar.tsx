@@ -4,7 +4,7 @@ import { Box, Text } from 'ink';
 import type { CursorStyle } from '../config/types';
 import type { CommandBarState } from '../hooks/useCommandBar';
 
-type Props = {
+type CommandBarProps = {
   state: CommandBarState;
   status: string;
   fileStatus: string;
@@ -22,7 +22,7 @@ const CURSOR_GLYPH_BY_STYLE: Record<CursorStyle['shape'], string> = {
   underline: '▁'
 };
 
-export const CommandBar = ({ state, status, fileStatus, cursorStyle, fileError, filter }: Props) => {
+export const CommandBar = ({ state, status, fileStatus, cursorStyle, fileError, filter }: CommandBarProps) => {
   const resolvedCursorStyle: CursorStyle = cursorStyle ?? { shape: 'block', blink: false };
   const cursorGlyph = CURSOR_GLYPH_BY_STYLE[resolvedCursorStyle.shape];
   const [blinkVisible, setBlinkVisible] = useState(true);

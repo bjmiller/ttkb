@@ -23,7 +23,7 @@ import { CommandBar } from './CommandBar';
 import { ColumnLayout } from './ColumnLayout';
 import { HelpOverlay } from './HelpOverlay';
 
-type Props = {
+type AppProps = {
   todoFilePath: string;
   cursorStyle?: CursorStyle;
 };
@@ -37,7 +37,7 @@ const SHOW_CURSOR = '\u001b[?25h';
 
 const byLineNumber = <T extends { lineNumber: number }>(left: T, right: T) => left.lineNumber - right.lineNumber;
 
-export const App = ({ todoFilePath, cursorStyle }: Props) => {
+export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   const { exit } = useApp();
   const terminalHeight = process.stdout.rows ?? DEFAULT_TERMINAL_HEIGHT;
   const [scrollOffset, setScrollOffset] = useState(0);

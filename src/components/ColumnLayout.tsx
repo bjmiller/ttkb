@@ -4,7 +4,7 @@ import { Box } from 'ink';
 import type { ColumnKey, Columns } from '../logic/columns';
 import { Column } from './Column';
 
-type Props = {
+type ColumnLayoutProps = {
   columns: Columns;
   selectedColumn: ColumnKey;
   selectedIndex: number;
@@ -12,7 +12,13 @@ type Props = {
   visibleCount: number;
 };
 
-export const ColumnLayout = ({ columns, selectedColumn, selectedIndex, scrollOffset, visibleCount }: Props) => {
+export const ColumnLayout = ({
+  columns,
+  selectedColumn,
+  selectedIndex,
+  scrollOffset,
+  visibleCount
+}: ColumnLayoutProps) => {
   return (
     <Box flexDirection="row" flexGrow={1}>
       <Column

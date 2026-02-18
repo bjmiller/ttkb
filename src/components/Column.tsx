@@ -5,7 +5,7 @@ import type { DisplayTask } from '../logic/columns';
 import { TaskCard } from './TaskCard';
 import { UnparseableTaskCard } from './UnparseableTaskCard';
 
-type Props = {
+type ColumnProps = {
   title: string;
   tasks: DisplayTask[];
   selectedIndex: number;
@@ -14,7 +14,7 @@ type Props = {
   visibleCount: number;
 };
 
-export const Column = ({ title, tasks, selectedIndex, selectedColumn, scrollOffset, visibleCount }: Props) => {
+export const Column = ({ title, tasks, selectedIndex, selectedColumn, scrollOffset, visibleCount }: ColumnProps) => {
   const visibleTasks = tasks.slice(scrollOffset, scrollOffset + visibleCount);
 
   return (
