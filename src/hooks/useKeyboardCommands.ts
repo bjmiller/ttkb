@@ -14,6 +14,8 @@ type KeyActions = {
   onEdit: () => void;
   onEditDates: () => void;
   onPriority: () => void;
+  onCycleTableSort: () => void;
+  onToggleTableSortDirection: () => void;
   onFilter: () => void;
   onToggleView: () => void;
   onCleanDone: () => void;
@@ -144,6 +146,16 @@ export const useKeyboardCommands = (actions: KeyActions) => {
 
     if (input === 'p') {
       actions.onPriority();
+      return;
+    }
+
+    if (input === 's') {
+      actions.onCycleTableSort();
+      return;
+    }
+
+    if (input === '.') {
+      actions.onToggleTableSortDirection();
       return;
     }
 

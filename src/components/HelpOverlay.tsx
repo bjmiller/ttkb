@@ -11,6 +11,8 @@ export const HelpOverlay = () => {
       <Text>a: add task</Text>
       <Text>e: edit selected task description</Text>
       <Text>p: change priority</Text>
+      <Text>s: cycle table sort column</Text>
+      <Text>.: toggle table sort direction</Text>
       <Text>f: filter tasks</Text>
       <Text>v: toggle card/table view</Text>
       <Text>c: clean done to done.txt</Text>
@@ -18,7 +20,7 @@ export const HelpOverlay = () => {
       <Text>Delete: delete selected task (confirm)</Text>
       <Text>Tab: switch created/completed date while editing done task dates</Text>
       <Text>Shift-Q: quit confirmation</Text>
-      <Text>Esc: dismiss input/filter</Text>
+      <Text>Esc: dismiss input/filter, clear table sort</Text>
       <Text>?: help</Text>
     </Box>
   );

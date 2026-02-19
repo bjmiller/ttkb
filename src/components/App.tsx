@@ -8,7 +8,7 @@ import { type CommandBarState, useCommandBar } from '../hooks/useCommandBar';
 import { useKeyboardCommands } from '../hooks/useKeyboardCommands';
 import { useSelection } from '../hooks/useSelection';
 import { useTodoFile } from '../hooks/useTodoFile';
-import { type ColumnKey, type Columns, type DisplayTask, buildColumns } from '../logic/columns';
+import { type Columns, buildColumns } from '../logic/columns';
 import {
   addTask,
   changeDates,
@@ -19,6 +19,13 @@ import {
   toggleDoing
 } from '../logic/mutations';
 import { appendLinesToFile } from '../logic/persistence';
+import {
+  type TableRow,
+  type TableSort,
+  FIRST_SORT_COLUMN,
+  TABLE_SORT_COLUMNS,
+  sortTableRows
+} from '../logic/tableSort';
 import { CommandBar } from './CommandBar';
 import { ColumnLayout } from './ColumnLayout';
 import { HelpOverlay } from './HelpOverlay';
@@ -38,10 +45,6 @@ const SHOW_CURSOR = '\u001b[?25h';
 const TABLE_ROW_HEIGHT = 1;
 
 type ViewMode = 'cards' | 'table';
-type TableRow = {
-  status: ColumnKey;
-  task: DisplayTask;
-};
 
 const byLineNumber = <T extends { lineNumber: number }>(left: T, right: T) => left.lineNumber - right.lineNumber;
 
@@ -67,6 +70,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   const [scrollOffset, setScrollOffset] = useState(0);
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [tableSelectedIndex, setTableSelectedIndex] = useState(0);
+  const [tableSort, setTableSort] = useState<TableSort | undefined>();
 
   const { items, errors, status: fileStatus, error: fileError, mutateTodos } = useTodoFile(todoFilePath);
   const commandBar = useCommandBar();
@@ -74,7 +78,10 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   const columns = useMemo(() => buildColumns(items, errors, commandBar.filter), [items, errors, commandBar.filter]);
 
   const selection = useSelection(columns);
-  const tableRows = useMemo<TableRow[]>(() => buildTableRows(columns), [columns]);
+  const tableRows = useMemo<TableRow[]>(() => {
+    const rows = buildTableRows(columns);
+    return sortTableRows(rows, tableSort);
+  }, [columns, tableSort]);
 
   const doneFilePath = useMemo(() => path.join(path.dirname(todoFilePath), DONE_FILE_NAME), [todoFilePath]);
   const viewportRows = Math.max(1, terminalHeight - RESERVED_BOTTOM_ROWS);
@@ -309,7 +316,8 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
 
     if (selected) {
       const unfilteredColumns = buildColumns(items, errors, undefined);
-      const unfilteredRows = buildTableRows(unfilteredColumns);
+      const unfilteredRowsBase = buildTableRows(unfilteredColumns);
+      const unfilteredRows = sortTableRows(unfilteredRowsBase, tableSort);
       const nextSelectedIndex = unfilteredRows.findIndex(
         (row) => row.task.item.lineNumber === selected.item.lineNumber
       );
@@ -342,7 +350,84 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
       return;
     }
 
+    if (viewMode === 'table' && commandBar.state.mode === 'idle' && tableSort) {
+      const selected = tableRows[tableSelectedIndex]?.task;
+      const unsortedRows = buildTableRows(columns);
+
+      if (selected) {
+        const nextSelectedIndex = unsortedRows.findIndex(
+          (row) => row.task.item.lineNumber === selected.item.lineNumber
+        );
+        if (nextSelectedIndex >= 0) {
+          setTableSelectedIndex(nextSelectedIndex);
+        }
+      }
+
+      setTableSort(undefined);
+      commandBar.setStatusText('Table sort cleared');
+      return;
+    }
+
     commandBar.cancel();
+  };
+
+  const cycleTableSortColumn = () => {
+    if (viewMode !== 'table') {
+      return;
+    }
+
+    const selected = tableRows[tableSelectedIndex]?.task;
+    const baseRows = buildTableRows(columns);
+    const nextSort: TableSort = (() => {
+      if (!tableSort) {
+        return { column: FIRST_SORT_COLUMN, direction: 'asc' };
+      }
+
+      const currentIndex = TABLE_SORT_COLUMNS.indexOf(tableSort.column);
+      const nextIndex = (currentIndex + 1) % TABLE_SORT_COLUMNS.length;
+      return { column: TABLE_SORT_COLUMNS[nextIndex] ?? FIRST_SORT_COLUMN, direction: 'asc' };
+    })();
+
+    const nextRows = sortTableRows(baseRows, nextSort);
+    setTableSort(nextSort);
+
+    if (selected) {
+      const nextIndex = nextRows.findIndex((row) => row.task.item.lineNumber === selected.item.lineNumber);
+      if (nextIndex >= 0) {
+        setTableSelectedIndex(nextIndex);
+      }
+    }
+
+    commandBar.setStatusText(`Sort: ${nextSort.column} (${nextSort.direction})`);
+  };
+
+  const toggleTableSortDirection = () => {
+    if (viewMode !== 'table') {
+      return;
+    }
+
+    if (!tableSort) {
+      return;
+    }
+
+    const selected = tableRows[tableSelectedIndex]?.task;
+
+    const nextSort: TableSort = {
+      column: tableSort.column,
+      direction: tableSort.direction === 'asc' ? 'desc' : 'asc'
+    };
+    const baseRows = buildTableRows(columns);
+    const nextRows = sortTableRows(baseRows, nextSort);
+    setTableSort(nextSort);
+
+    if (selected) {
+      const nextIndex = nextRows.findIndex((row) => row.task.item.lineNumber === selected.item.lineNumber);
+      if (nextIndex >= 0) {
+        setTableSelectedIndex(nextIndex);
+      }
+    }
+
+    commandBar.setStatusText(`Sort: ${nextSort.column} (${nextSort.direction})`);
   };
 
   useKeyboardCommands({
@@ -377,6 +462,8 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
       });
     },
     onPriority: commandBar.openChangePriority,
+    onCycleTableSort: cycleTableSortColumn,
+    onToggleTableSortDirection: toggleTableSortDirection,
     onFilter: toggleFilter,
     onToggleView: () => {
       setViewMode((current) => (current === 'cards' ? 'table' : 'cards'));
@@ -406,6 +493,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
           selectedIndex={tableSelectedIndex}
           scrollOffset={scrollOffset}
           visibleCount={tableVisibleCount}
+          {...(tableSort ? { sort: tableSort } : {})}
         />
       ) : (
         <ColumnLayout

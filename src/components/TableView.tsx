@@ -13,7 +13,13 @@ type TableViewProps = {
   selectedIndex: number;
   scrollOffset: number;
   visibleCount: number;
+  sort?: {
+    column: 'status' | 'priority' | 'created' | 'project' | 'context' | 'meta' | 'description';
+    direction: 'asc' | 'desc';
+  };
 };
+
+type SortColumn = NonNullable<TableViewProps['sort']>['column'];
 
 const ROW_NUMBER_WIDTH = 4;
 const STATUS_WIDTH = 8;
@@ -35,6 +41,7 @@ const PROJECT_HEADER = 'Project';
 const CONTEXT_HEADER = 'Context';
 const META_HEADER = 'Meta';
 const PRIORITY_HEADER = 'P';
+const SORT_ARROW_PADDING = 1;
 
 type TableColumnWidths = {
   project: number;
@@ -82,7 +89,11 @@ const getRowCellValues = (row: TableRow): RowCellValues => {
   };
 };
 
-const getColumnWidths = (rows: TableRow[]): TableColumnWidths => {
+const getColumnWidths = (rows: TableRow[], sort: TableViewProps['sort']): TableColumnWidths => {
+  const minProjectWidth = PROJECT_HEADER.length + (sort?.column === 'project' ? SORT_ARROW_PADDING : 0);
+  const minContextWidth = CONTEXT_HEADER.length + (sort?.column === 'context' ? SORT_ARROW_PADDING : 0);
+  const minMetaWidth = META_HEADER.length + (sort?.column === 'meta' ? SORT_ARROW_PADDING : 0);
+
   return rows.reduce<TableColumnWidths>(
     (widths, row) => {
       const values = getRowCellValues(row);
@@ -94,9 +105,9 @@ const getColumnWidths = (rows: TableRow[]): TableColumnWidths => {
       };
     },
     {
-      project: PROJECT_HEADER.length,
-      context: CONTEXT_HEADER.length,
-      meta: META_HEADER.length
+      project: minProjectWidth,
+      context: minContextWidth,
+      meta: minMetaWidth
     }
   );
 };
@@ -113,15 +124,47 @@ const renderHeaderDivider = (widths: TableColumnWidths): string => {
   return `${rowNumber}─┼─${status}─┼─${priority}─┼─${created}─┼─${project}─┼─${context}─┼─${meta}─┼─${description}`;
 };
 
-const renderHeaderText = (widths: TableColumnWidths): string => {
+const renderHeaderCell = (params: {
+  label: string;
+  width: number;
+  sort: TableViewProps['sort'];
+  column: SortColumn;
+}): React.ReactNode => {
+  const base = formatCell(params.label, params.width);
+
+  if (!params.sort || params.sort.column !== params.column || params.label.length >= params.width) {
+    return base;
+  }
+
+  const arrow = params.sort.direction === 'asc' ? '↑' : '↓';
+  const left = base.slice(0, params.label.length);
+  const right = base.slice(params.label.length + 1);
+
+  return (
+    <>
+      {left}
+      <Text color="red">{arrow}</Text>
+      {right}
+    </>
+  );
+};
+
+const renderHeaderText = (widths: TableColumnWidths, sort: TableViewProps['sort']): React.ReactNode => {
   const rowNumber = formatCell('#', ROW_NUMBER_WIDTH);
-  const status = formatCell('Status', STATUS_WIDTH);
-  const priority = formatCell(PRIORITY_HEADER, PRIORITY_WIDTH);
-  const created = formatCell('Created', DATE_WIDTH);
-  const project = formatCell(PROJECT_HEADER, widths.project);
-  const context = formatCell(CONTEXT_HEADER, widths.context);
-  const meta = formatCell(META_HEADER, widths.meta);
-  return `${rowNumber} │ ${status} │ ${priority} │ ${created} │ ${project} │ ${context} │ ${meta} │ ${DESCRIPTION_HEADER}`;
+  const status = renderHeaderCell({ label: 'Status', width: STATUS_WIDTH, sort, column: 'status' });
+  const priority = renderHeaderCell({ label: PRIORITY_HEADER, width: PRIORITY_WIDTH, sort, column: 'priority' });
+  const created = renderHeaderCell({ label: 'Created', width: DATE_WIDTH, sort, column: 'created' });
+  const project = renderHeaderCell({ label: PROJECT_HEADER, width: widths.project, sort, column: 'project' });
+  const context = renderHeaderCell({ label: CONTEXT_HEADER, width: widths.context, sort, column: 'context' });
+  const meta = renderHeaderCell({ label: META_HEADER, width: widths.meta, sort, column: 'meta' });
+  const description = DESCRIPTION_HEADER;
+
+  return (
+    <>
+      {rowNumber} │ {status} │ {priority} │ {created} │ {project} │ {context} │ {meta} │ {description}
+      {sort?.column === 'description' ? <Text color="red">{sort.direction === 'asc' ? '↑' : '↓'}</Text> : null}
+    </>
+  );
 };
 
 const renderRowText = (row: TableRow, widths: TableColumnWidths): React.ReactNode => {
@@ -143,10 +186,10 @@ const renderRowText = (row: TableRow, widths: TableColumnWidths): React.ReactNod
   );
 };
 
-export const TableView = ({ rows, selectedIndex, scrollOffset, visibleCount }: TableViewProps) => {
-  const widths = getColumnWidths(rows);
+export const TableView = ({ rows, selectedIndex, scrollOffset, visibleCount, sort }: TableViewProps) => {
+  const widths = getColumnWidths(rows, sort);
   const visibleRows = rows.slice(scrollOffset, scrollOffset + visibleCount);
-  const headerText = renderHeaderText(widths);
+  const headerText = renderHeaderText(widths, sort);
   const headerDivider = renderHeaderDivider(widths);
 
   return (
