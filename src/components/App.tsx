@@ -56,6 +56,28 @@ const buildTableRows = (columns: Columns): TableRow[] => {
   ];
 };
 
+const findCardSelectionByLineNumber = (
+  columns: Columns,
+  lineNumber: number
+): { column: 'backlog' | 'doing' | 'done'; index: number } | undefined => {
+  const backlogIndex = columns.backlog.findIndex((task) => task.item.lineNumber === lineNumber);
+  if (backlogIndex >= 0) {
+    return { column: 'backlog', index: backlogIndex };
+  }
+
+  const doingIndex = columns.doing.findIndex((task) => task.item.lineNumber === lineNumber);
+  if (doingIndex >= 0) {
+    return { column: 'doing', index: doingIndex };
+  }
+
+  const doneIndex = columns.done.findIndex((task) => task.item.lineNumber === lineNumber);
+  if (doneIndex >= 0) {
+    return { column: 'done', index: doneIndex };
+  }
+
+  return undefined;
+};
+
 export const shouldClearFilterOnCancel = (params: { hasFilter: boolean; state: CommandBarState }): boolean => {
   if (!params.hasFilter) {
     return false;
@@ -430,6 +452,36 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     commandBar.setStatusText(`Sort: ${nextSort.column} (${nextSort.direction})`);
   };
 
+  const toggleView = () => {
+    if (viewMode === 'cards') {
+      const selected = selection.selectedItem;
+
+      if (selected) {
+        const nextSelectedIndex = tableRows.findIndex((row) => row.task.item.lineNumber === selected.item.lineNumber);
+        if (nextSelectedIndex >= 0) {
+          setTableSelectedIndex(nextSelectedIndex);
+        }
+      }
+
+      setViewMode('table');
+      setScrollOffset(0);
+      commandBar.setStatusText('Table view');
+      return;
+    }
+
+    const selected = tableRows[tableSelectedIndex]?.task;
+    if (selected) {
+      const nextSelection = findCardSelectionByLineNumber(columns, selected.item.lineNumber);
+      if (nextSelection) {
+        selection.setColumnIndex(nextSelection.column, nextSelection.index);
+      }
+    }
+
+    setViewMode('cards');
+    setScrollOffset(0);
+    commandBar.setStatusText('Card view');
+  };
+
   useKeyboardCommands({
     state: commandBar.state,
     onMoveUp: viewMode === 'table' ? moveTableUp : selection.moveUp,
@@ -465,11 +517,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     onCycleTableSort: cycleTableSortColumn,
     onToggleTableSortDirection: toggleTableSortDirection,
     onFilter: toggleFilter,
-    onToggleView: () => {
-      setViewMode((current) => (current === 'cards' ? 'table' : 'cards'));
-      setScrollOffset(0);
-      commandBar.setStatusText(viewMode === 'cards' ? 'Table view' : 'Card view');
-    },
+    onToggleView: toggleView,
     onCleanDone: cleanCompleted,
     onHelp: commandBar.openHelp,
     onQuitConfirm: commandBar.openQuitConfirm,
