@@ -42,6 +42,8 @@ const CONTEXT_HEADER = 'Context';
 const META_HEADER = 'Meta';
 const PRIORITY_HEADER = 'P';
 const SORT_ARROW_PADDING = 1;
+const SORT_ARROW_UP = '\u{f176}';
+const SORT_ARROW_DOWN = '\u{f175}';
 
 type TableColumnWidths = {
   project: number;
@@ -124,6 +126,19 @@ const renderHeaderDivider = (widths: TableColumnWidths): string => {
   return `${rowNumber}─┼─${status}─┼─${priority}─┼─${created}─┼─${project}─┼─${context}─┼─${meta}─┼─${description}`;
 };
 
+const getSortArrow = (sort: TableViewProps['sort'], column: SortColumn): string | undefined => {
+  if (!sort || sort.column !== column) {
+    return undefined;
+  }
+
+  return sort.direction === 'asc' ? SORT_ARROW_UP : SORT_ARROW_DOWN;
+};
+
+const renderSortArrow = (sort: TableViewProps['sort'], column: SortColumn): React.ReactNode => {
+  const arrow = getSortArrow(sort, column);
+  return arrow ? <Text color="red">{arrow}</Text> : null;
+};
+
 const renderHeaderCell = (params: {
   label: string;
   width: number;
@@ -131,12 +146,12 @@ const renderHeaderCell = (params: {
   column: SortColumn;
 }): React.ReactNode => {
   const base = formatCell(params.label, params.width);
+  const arrow = getSortArrow(params.sort, params.column);
 
-  if (!params.sort || params.sort.column !== params.column || params.label.length >= params.width) {
+  if (!arrow || params.label.length >= params.width) {
     return base;
   }
 
-  const arrow = params.sort.direction === 'asc' ? '↑' : '↓';
   const left = base.slice(0, params.label.length);
   const right = base.slice(params.label.length + 1);
 
@@ -162,7 +177,7 @@ const renderHeaderText = (widths: TableColumnWidths, sort: TableViewProps['sort'
   return (
     <>
       {rowNumber} │ {status} │ {priority} │ {created} │ {project} │ {context} │ {meta} │ {description}
-      {sort?.column === 'description' ? <Text color="red">{sort.direction === 'asc' ? '↑' : '↓'}</Text> : null}
+      {renderSortArrow(sort, 'description')}
     </>
   );
 };
