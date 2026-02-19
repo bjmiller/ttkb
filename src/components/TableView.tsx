@@ -114,7 +114,8 @@ const getColumnWidths = (rows: TableRow[], sort: TableViewProps['sort']): TableC
   );
 };
 
-const renderHeaderDivider = (widths: TableColumnWidths): string => {
+const renderHeaderDivider = (widths: TableColumnWidths, sort: TableViewProps['sort']): string => {
+  const descriptionWidth = DESCRIPTION_HEADER.length + (sort?.column === 'description' ? SORT_ARROW_PADDING : 0);
   const rowNumber = '─'.repeat(ROW_NUMBER_WIDTH);
   const status = '─'.repeat(STATUS_WIDTH);
   const priority = '─'.repeat(PRIORITY_WIDTH);
@@ -122,7 +123,7 @@ const renderHeaderDivider = (widths: TableColumnWidths): string => {
   const project = '─'.repeat(widths.project);
   const context = '─'.repeat(widths.context);
   const meta = '─'.repeat(widths.meta);
-  const description = '─'.repeat(DESCRIPTION_HEADER.length);
+  const description = '─'.repeat(descriptionWidth);
   return `${rowNumber}─┼─${status}─┼─${priority}─┼─${created}─┼─${project}─┼─${context}─┼─${meta}─┼─${description}`;
 };
 
@@ -132,11 +133,6 @@ const getSortArrow = (sort: TableViewProps['sort'], column: SortColumn): string 
   }
 
   return sort.direction === 'asc' ? SORT_ARROW_UP : SORT_ARROW_DOWN;
-};
-
-const renderSortArrow = (sort: TableViewProps['sort'], column: SortColumn): React.ReactNode => {
-  const arrow = getSortArrow(sort, column);
-  return arrow ? <Text color="red">{arrow}</Text> : null;
 };
 
 const renderHeaderCell = (params: {
@@ -165,6 +161,7 @@ const renderHeaderCell = (params: {
 };
 
 const renderHeaderText = (widths: TableColumnWidths, sort: TableViewProps['sort']): React.ReactNode => {
+  const descriptionWidth = DESCRIPTION_HEADER.length + (sort?.column === 'description' ? SORT_ARROW_PADDING : 0);
   const rowNumber = formatCell('#', ROW_NUMBER_WIDTH);
   const status = renderHeaderCell({ label: 'Status', width: STATUS_WIDTH, sort, column: 'status' });
   const priority = renderHeaderCell({ label: PRIORITY_HEADER, width: PRIORITY_WIDTH, sort, column: 'priority' });
@@ -172,12 +169,16 @@ const renderHeaderText = (widths: TableColumnWidths, sort: TableViewProps['sort'
   const project = renderHeaderCell({ label: PROJECT_HEADER, width: widths.project, sort, column: 'project' });
   const context = renderHeaderCell({ label: CONTEXT_HEADER, width: widths.context, sort, column: 'context' });
   const meta = renderHeaderCell({ label: META_HEADER, width: widths.meta, sort, column: 'meta' });
-  const description = DESCRIPTION_HEADER;
+  const description = renderHeaderCell({
+    label: DESCRIPTION_HEADER,
+    width: descriptionWidth,
+    sort,
+    column: 'description'
+  });
 
   return (
     <>
       {rowNumber} │ {status} │ {priority} │ {created} │ {project} │ {context} │ {meta} │ {description}
-      {renderSortArrow(sort, 'description')}
     </>
   );
 };
@@ -205,7 +206,7 @@ export const TableView = ({ rows, selectedIndex, scrollOffset, visibleCount, sor
   const widths = getColumnWidths(rows, sort);
   const visibleRows = rows.slice(scrollOffset, scrollOffset + visibleCount);
   const headerText = renderHeaderText(widths, sort);
-  const headerDivider = renderHeaderDivider(widths);
+  const headerDivider = renderHeaderDivider(widths, sort);
 
   return (
     <Box flexDirection="column" flexGrow={1} paddingX={1}>
