@@ -14,8 +14,11 @@ type ColumnProps = {
   visibleCount: number;
 };
 
-export const Column = ({ title, tasks, selectedIndex, selectedColumn, scrollOffset, visibleCount }: ColumnProps) => {
-  const visibleTasks = tasks.slice(scrollOffset, scrollOffset + visibleCount);
+const ColumnComponent = ({ title, tasks, selectedIndex, selectedColumn, scrollOffset, visibleCount }: ColumnProps) => {
+  const visibleTasks = React.useMemo(
+    () => tasks.slice(scrollOffset, scrollOffset + visibleCount),
+    [tasks, scrollOffset, visibleCount]
+  );
 
   return (
     <Box flexDirection="column" width="33%" paddingX={1}>
@@ -38,3 +41,29 @@ export const Column = ({ title, tasks, selectedIndex, selectedColumn, scrollOffs
     </Box>
   );
 };
+
+export const Column = React.memo(ColumnComponent, (prev, next) => {
+  if (prev.title !== next.title) {
+    return false;
+  }
+
+  if (prev.tasks !== next.tasks) {
+    return false;
+  }
+
+  if (prev.scrollOffset !== next.scrollOffset || prev.visibleCount !== next.visibleCount) {
+    return false;
+  }
+
+  if (prev.selectedColumn !== next.selectedColumn) {
+    return false;
+  }
+
+  if (!prev.selectedColumn && !next.selectedColumn) {
+    return true;
+  }
+
+  return prev.selectedIndex === next.selectedIndex;
+});
+
+Column.displayName = 'Column';

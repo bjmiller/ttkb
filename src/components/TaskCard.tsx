@@ -8,7 +8,7 @@ type TaskCardProps = {
   selected: boolean;
 };
 
-export const TaskCard = ({ item, selected }: TaskCardProps) => {
+const TaskCardComponent = ({ item, selected }: TaskCardProps) => {
   const borderColor = selected ? 'greenBright' : 'white';
   const borderStyle = selected ? 'bold' : 'single';
 
@@ -36,3 +36,9 @@ export const TaskCard = ({ item, selected }: TaskCardProps) => {
     </Box>
   );
 };
+
+export const TaskCard = React.memo(TaskCardComponent, (prev, next) => {
+  return prev.item === next.item && prev.selected === next.selected;
+});
+
+TaskCard.displayName = 'TaskCard';

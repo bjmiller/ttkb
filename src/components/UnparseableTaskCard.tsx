@@ -8,7 +8,7 @@ type UnparseableTaskCardProps = {
   selected: boolean;
 };
 
-export const UnparseableTaskCard = ({ item, selected }: UnparseableTaskCardProps) => {
+const UnparseableTaskCardComponent = ({ item, selected }: UnparseableTaskCardProps) => {
   return (
     <Box
       borderStyle="round"
@@ -23,3 +23,9 @@ export const UnparseableTaskCard = ({ item, selected }: UnparseableTaskCardProps
     </Box>
   );
 };
+
+export const UnparseableTaskCard = React.memo(UnparseableTaskCardComponent, (prev, next) => {
+  return prev.item === next.item && prev.selected === next.selected;
+});
+
+UnparseableTaskCard.displayName = 'UnparseableTaskCard';

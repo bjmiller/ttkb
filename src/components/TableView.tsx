@@ -60,6 +60,11 @@ type RowCellValues = {
   description: string;
 };
 
+type PreparedRow = {
+  key: string;
+  content: React.ReactNode;
+};
+
 const getRowCellValues = (row: TableRow): RowCellValues => {
   if (row.task.kind === 'unparseable') {
     return {
@@ -202,11 +207,40 @@ const renderRowText = (row: TableRow, widths: TableColumnWidths): React.ReactNod
   );
 };
 
+type TableRowLineProps = {
+  rowKey: string;
+  selected: boolean;
+  content: React.ReactNode;
+};
+
+const TableRowLineComponent = ({ rowKey, selected, content }: TableRowLineProps) => {
+  return (
+    <Text key={rowKey} wrap="truncate-end" {...(selected ? { backgroundColor: 'blue', color: 'white' } : {})}>
+      {content}
+    </Text>
+  );
+};
+
+const TableRowLine = React.memo(TableRowLineComponent, (prev, next) => {
+  return prev.rowKey === next.rowKey && prev.selected === next.selected && prev.content === next.content;
+});
+
+TableRowLine.displayName = 'TableRowLine';
+
 export const TableView = ({ rows, selectedIndex, scrollOffset, visibleCount, sort }: TableViewProps) => {
-  const widths = getColumnWidths(rows, sort);
-  const visibleRows = rows.slice(scrollOffset, scrollOffset + visibleCount);
-  const headerText = renderHeaderText(widths, sort);
-  const headerDivider = renderHeaderDivider(widths, sort);
+  const widths = React.useMemo(() => getColumnWidths(rows, sort), [rows, sort]);
+  const preparedRows = React.useMemo<PreparedRow[]>(() => {
+    return rows.map((row) => ({
+      key: `${row.task.item.lineNumber}-${row.status}`,
+      content: renderRowText(row, widths)
+    }));
+  }, [rows, widths]);
+  const visibleRows = React.useMemo(
+    () => preparedRows.slice(scrollOffset, scrollOffset + visibleCount),
+    [preparedRows, scrollOffset, visibleCount]
+  );
+  const headerText = React.useMemo(() => renderHeaderText(widths, sort), [widths, sort]);
+  const headerDivider = React.useMemo(() => renderHeaderDivider(widths, sort), [widths, sort]);
 
   return (
     <Box flexDirection="column" flexGrow={1} paddingX={1}>
@@ -217,15 +251,7 @@ export const TableView = ({ rows, selectedIndex, scrollOffset, visibleCount, sor
         const absoluteIndex = scrollOffset + index;
         const isSelected = absoluteIndex === selectedIndex;
 
-        return (
-          <Text
-            key={`${row.task.item.raw}`}
-            wrap="truncate-end"
-            {...(isSelected ? { backgroundColor: 'blue', color: 'white' } : {})}
-          >
-            {renderRowText(row, widths)}
-          </Text>
-        );
+        return <TableRowLine key={row.key} rowKey={row.key} selected={isSelected} content={row.content} />;
       })}
     </Box>
   );
