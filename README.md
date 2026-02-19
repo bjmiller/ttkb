@@ -21,11 +21,7 @@ Supported filenames/formats:
 ### Configuration options
 
 - `todoDirectoryPath` (string): directory containing your `todo.txt`. ttkb always uses `todo.txt` as the filename.
-- `cursorStyle` (string): cursor rendering mode for command input.
-  - `native` (default): best-effort native terminal behavior.
-  - `block`
-  - `bar`
-  - `underline`
+- `cursorStyle` (string): cursor rendering mode for command input.  Options are: `native` (default, best-effort native terminal behavior), `block`, `bar`, or `underline`.
 - `cursorBlink` (boolean): whether command cursor blinks. Default: `false`.
 
 If `cursorStyle` is set to `block`, `bar`, or `underline`, that explicit style is used and terminal detection is skipped.

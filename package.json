@@ -1,11 +1,14 @@
 {
   "name": "ttkb",
+  "version": "1.0.0",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "module": "index.ts",
   "scripts": {
     "lint": "oxlint --type-aware --fix",
-    "format": "oxfmt --write"
+    "format": "oxfmt --write",
+    "build": "bun build ./index.tsx --compile --outfile dist/ttkb"
   },
   "dependencies": {
     "arktype": "^2.1.29",
@@ -18,7 +21,8 @@
     "@types/react": "^19.2.14",
     "oxfmt": "^0.32.0",
     "oxlint": "^1.47.0",
-    "oxlint-tsgolint": "^0.12.2"
+    "oxlint-tsgolint": "^0.12.2",
+    "react-devtools-core": "^7.0.1"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
