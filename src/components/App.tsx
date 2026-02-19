@@ -4,11 +4,11 @@ import { Box, useApp } from 'ink';
 
 import type { CursorStyle } from '../config/types';
 
-import { useCommandBar } from '../hooks/useCommandBar';
+import { type CommandBarState, useCommandBar } from '../hooks/useCommandBar';
 import { useKeyboardCommands } from '../hooks/useKeyboardCommands';
 import { useSelection } from '../hooks/useSelection';
 import { useTodoFile } from '../hooks/useTodoFile';
-import { buildColumns } from '../logic/columns';
+import { type ColumnKey, type Columns, type DisplayTask, buildColumns } from '../logic/columns';
 import {
   addTask,
   changeDates,
@@ -22,6 +22,7 @@ import { appendLinesToFile } from '../logic/persistence';
 import { CommandBar } from './CommandBar';
 import { ColumnLayout } from './ColumnLayout';
 import { HelpOverlay } from './HelpOverlay';
+import { TableView } from './TableView';
 
 type AppProps = {
   todoFilePath: string;
@@ -34,13 +35,38 @@ const DEFAULT_TERMINAL_HEIGHT = 24;
 const DONE_FILE_NAME = 'done.txt';
 const HIDE_CURSOR = '\u001b[?25l';
 const SHOW_CURSOR = '\u001b[?25h';
+const TABLE_ROW_HEIGHT = 1;
+
+type ViewMode = 'cards' | 'table';
+type TableRow = {
+  status: ColumnKey;
+  task: DisplayTask;
+};
 
 const byLineNumber = <T extends { lineNumber: number }>(left: T, right: T) => left.lineNumber - right.lineNumber;
+
+const buildTableRows = (columns: Columns): TableRow[] => {
+  return [
+    ...columns.backlog.map((task) => ({ status: 'backlog' as const, task })),
+    ...columns.doing.map((task) => ({ status: 'doing' as const, task })),
+    ...columns.done.map((task) => ({ status: 'done' as const, task }))
+  ];
+};
+
+export const shouldClearFilterOnCancel = (params: { hasFilter: boolean; state: CommandBarState }): boolean => {
+  if (!params.hasFilter) {
+    return false;
+  }
+
+  return params.state.mode === 'idle' || (params.state.mode === 'input' && params.state.kind === 'filter');
+};
 
 export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   const { exit } = useApp();
   const terminalHeight = process.stdout.rows ?? DEFAULT_TERMINAL_HEIGHT;
   const [scrollOffset, setScrollOffset] = useState(0);
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [tableSelectedIndex, setTableSelectedIndex] = useState(0);
 
   const { items, errors, status: fileStatus, error: fileError, mutateTodos } = useTodoFile(todoFilePath);
   const commandBar = useCommandBar();
@@ -48,18 +74,33 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   const columns = useMemo(() => buildColumns(items, errors, commandBar.filter), [items, errors, commandBar.filter]);
 
   const selection = useSelection(columns);
+  const tableRows = useMemo<TableRow[]>(() => buildTableRows(columns), [columns]);
+
   const doneFilePath = useMemo(() => path.join(path.dirname(todoFilePath), DONE_FILE_NAME), [todoFilePath]);
   const viewportRows = Math.max(1, terminalHeight - RESERVED_BOTTOM_ROWS);
-  const visibleCount = Math.max(1, Math.floor(viewportRows / ESTIMATED_CARD_HEIGHT));
+  const cardVisibleCount = Math.max(1, Math.floor(viewportRows / ESTIMATED_CARD_HEIGHT));
+  const tableVisibleCount = Math.max(1, Math.floor(viewportRows / TABLE_ROW_HEIGHT));
 
   useEffect(() => {
-    const selectedIndex = selection.selectedIndex;
+    setTableSelectedIndex((current) => {
+      if (tableRows.length === 0) {
+        return 0;
+      }
+
+      return Math.min(current, tableRows.length - 1);
+    });
+  }, [tableRows]);
+
+  useEffect(() => {
+    const selectedIndex = viewMode === 'table' ? tableSelectedIndex : selection.selectedIndex;
+    const visibleCount = viewMode === 'table' ? tableVisibleCount : cardVisibleCount;
+
     if (selectedIndex < scrollOffset) {
       setScrollOffset(selectedIndex);
     } else if (selectedIndex >= scrollOffset + visibleCount) {
       setScrollOffset(Math.max(selectedIndex - visibleCount + 1, 0));
     }
-  }, [selection.selectedIndex, scrollOffset, visibleCount]);
+  }, [cardVisibleCount, scrollOffset, selection.selectedIndex, tableSelectedIndex, tableVisibleCount, viewMode]);
 
   useEffect(() => {
     process.stdout.write(HIDE_CURSOR);
@@ -76,8 +117,10 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
       return;
     }
 
+    const activeSelected = viewMode === 'table' ? tableRows[tableSelectedIndex]?.task : selection.selectedItem;
+
     if (action.type === 'change-priority') {
-      const selected = selection.selectedItem;
+      const selected = activeSelected;
       if (!selected || selected.kind !== 'todo') {
         commandBar.setStatusText('No selectable task');
         return;
@@ -95,7 +138,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     }
 
     if (action.type === 'change-description') {
-      const selected = selection.selectedItem;
+      const selected = activeSelected;
       if (!selected || selected.kind !== 'todo') {
         commandBar.setStatusText('No selectable task');
         return;
@@ -113,7 +156,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     }
 
     if (action.type === 'change-dates') {
-      const selected = selection.selectedItem;
+      const selected = activeSelected;
       if (!selected || selected.kind !== 'todo') {
         commandBar.setStatusText('No selectable task');
         return;
@@ -151,7 +194,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   };
 
   const toggleSelected = () => {
-    const selected = selection.selectedItem;
+    const selected = viewMode === 'table' ? tableRows[tableSelectedIndex]?.task : selection.selectedItem;
     if (!selected || selected.kind !== 'todo') {
       commandBar.setStatusText('No selectable task');
       return;
@@ -168,7 +211,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   };
 
   const toggleSelectedDoing = () => {
-    const selected = selection.selectedItem;
+    const selected = viewMode === 'table' ? tableRows[tableSelectedIndex]?.task : selection.selectedItem;
     if (!selected || selected.kind !== 'todo') {
       commandBar.setStatusText('No selectable task');
       return;
@@ -204,7 +247,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   };
 
   const openDeleteConfirm = () => {
-    const selected = selection.selectedItem;
+    const selected = viewMode === 'table' ? tableRows[tableSelectedIndex]?.task : selection.selectedItem;
     if (!selected) {
       commandBar.setStatusText('No selectable task');
       return;
@@ -215,7 +258,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   };
 
   const deleteSelected = () => {
-    const selected = selection.selectedItem;
+    const selected = viewMode === 'table' ? tableRows[tableSelectedIndex]?.task : selection.selectedItem;
     if (!selected) {
       commandBar.setStatusText('No selectable task');
       return;
@@ -234,17 +277,85 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     });
   };
 
+  const moveTableUp = () => {
+    setTableSelectedIndex((current) => {
+      const count = tableRows.length;
+      if (count === 0) {
+        return 0;
+      }
+
+      return (current - 1 + count) % count;
+    });
+  };
+
+  const moveTableDown = () => {
+    setTableSelectedIndex((current) => {
+      const count = tableRows.length;
+      if (count === 0) {
+        return 0;
+      }
+
+      return (current + 1) % count;
+    });
+  };
+
+  const clearFilter = () => {
+    if (viewMode !== 'table') {
+      commandBar.clearFilter();
+      return;
+    }
+
+    const selected = tableRows[tableSelectedIndex]?.task;
+
+    if (selected) {
+      const unfilteredColumns = buildColumns(items, errors, undefined);
+      const unfilteredRows = buildTableRows(unfilteredColumns);
+      const nextSelectedIndex = unfilteredRows.findIndex(
+        (row) => row.task.item.lineNumber === selected.item.lineNumber
+      );
+
+      if (nextSelectedIndex >= 0) {
+        setTableSelectedIndex(nextSelectedIndex);
+      }
+    }
+
+    commandBar.clearFilter();
+  };
+
+  const toggleFilter = () => {
+    if (viewMode === 'table' && commandBar.filter) {
+      clearFilter();
+      return;
+    }
+
+    commandBar.toggleFilter();
+  };
+
+  const cancel = () => {
+    const isClearingFilter = shouldClearFilterOnCancel({
+      hasFilter: Boolean(commandBar.filter),
+      state: commandBar.state
+    });
+
+    if (viewMode === 'table' && isClearingFilter) {
+      clearFilter();
+      return;
+    }
+
+    commandBar.cancel();
+  };
+
   useKeyboardCommands({
     state: commandBar.state,
-    onMoveUp: selection.moveUp,
-    onMoveDown: selection.moveDown,
-    onMoveLeft: selection.moveLeft,
-    onMoveRight: selection.moveRight,
+    onMoveUp: viewMode === 'table' ? moveTableUp : selection.moveUp,
+    onMoveDown: viewMode === 'table' ? moveTableDown : selection.moveDown,
+    onMoveLeft: viewMode === 'table' ? () => {} : selection.moveLeft,
+    onMoveRight: viewMode === 'table' ? () => {} : selection.moveRight,
     onToggleDone: toggleSelected,
     onToggleDoing: toggleSelectedDoing,
     onAdd: commandBar.openAdd,
     onEdit: () => {
-      const selected = selection.selectedItem;
+      const selected = viewMode === 'table' ? tableRows[tableSelectedIndex]?.task : selection.selectedItem;
       if (!selected || selected.kind !== 'todo') {
         commandBar.setStatusText('No selectable task');
         return;
@@ -253,7 +364,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
       commandBar.openEditDescription(selected.item.description);
     },
     onEditDates: () => {
-      const selected = selection.selectedItem;
+      const selected = viewMode === 'table' ? tableRows[tableSelectedIndex]?.task : selection.selectedItem;
       if (!selected || selected.kind !== 'todo') {
         commandBar.setStatusText('No selectable task');
         return;
@@ -266,12 +377,17 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
       });
     },
     onPriority: commandBar.openChangePriority,
-    onFilter: commandBar.toggleFilter,
+    onFilter: toggleFilter,
+    onToggleView: () => {
+      setViewMode((current) => (current === 'cards' ? 'table' : 'cards'));
+      setScrollOffset(0);
+      commandBar.setStatusText(viewMode === 'cards' ? 'Table view' : 'Card view');
+    },
     onCleanDone: cleanCompleted,
     onHelp: commandBar.openHelp,
     onQuitConfirm: commandBar.openQuitConfirm,
     onDelete: openDeleteConfirm,
-    onCancel: commandBar.cancel,
+    onCancel: cancel,
     onSubmit: applySubmit,
     onTab: commandBar.tab,
     onAppendInput: commandBar.appendInput,
@@ -279,18 +395,27 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     onConfirmQuit: exit,
     onConfirmDelete: deleteSelected,
     onDismissHelp: commandBar.dismissHelp,
-    onClearFilter: commandBar.clearFilter
+    onClearFilter: clearFilter
   });
 
   return (
     <Box flexDirection="column" height={terminalHeight}>
-      <ColumnLayout
-        columns={columns}
-        selectedColumn={selection.selectedColumnKey}
-        selectedIndex={selection.selectedIndex}
-        scrollOffset={scrollOffset}
-        visibleCount={visibleCount}
-      />
+      {viewMode === 'table' ? (
+        <TableView
+          rows={tableRows}
+          selectedIndex={tableSelectedIndex}
+          scrollOffset={scrollOffset}
+          visibleCount={tableVisibleCount}
+        />
+      ) : (
+        <ColumnLayout
+          columns={columns}
+          selectedColumn={selection.selectedColumnKey}
+          selectedIndex={selection.selectedIndex}
+          scrollOffset={scrollOffset}
+          visibleCount={cardVisibleCount}
+        />
+      )}
       {commandBar.state.mode === 'help' ? <HelpOverlay /> : null}
       <CommandBar
         state={commandBar.state}

@@ -67,6 +67,7 @@ If `cursorBlink` is set, it overrides detected/default blink behavior.
 ### Search and overlays
 
 - `f`: open filter prompt; `Esc` clears active filter
+- `v`: toggle card/table view
 - `?`: show help overlay
 
 ### Other commands

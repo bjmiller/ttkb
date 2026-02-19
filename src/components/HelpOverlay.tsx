@@ -12,6 +12,7 @@ export const HelpOverlay = () => {
       <Text>e: edit selected task description</Text>
       <Text>p: change priority</Text>
       <Text>f: filter tasks</Text>
+      <Text>v: toggle card/table view</Text>
       <Text>c: clean done to done.txt</Text>
       <Text>;: edit selected task dates</Text>
       <Text>Delete: delete selected task (confirm)</Text>

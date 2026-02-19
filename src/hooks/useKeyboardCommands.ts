@@ -15,6 +15,7 @@ type KeyActions = {
   onEditDates: () => void;
   onPriority: () => void;
   onFilter: () => void;
+  onToggleView: () => void;
   onCleanDone: () => void;
   onHelp: () => void;
   onQuitConfirm: () => void;
@@ -148,6 +149,11 @@ export const useKeyboardCommands = (actions: KeyActions) => {
 
     if (input === 'f') {
       actions.onFilter();
+      return;
+    }
+
+    if (input === 'v') {
+      actions.onToggleView();
       return;
     }
 
