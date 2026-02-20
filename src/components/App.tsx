@@ -5,6 +5,7 @@ import type { CursorStyle } from '../config/types';
 
 import { useCommandBar } from '../hooks/useCommandBar';
 import { useKeyboardCommands } from '../hooks/useKeyboardCommands';
+import { useEffectiveSelection, usePreserveSelection } from '../hooks/usePreserveSelection';
 import { useSelection } from '../hooks/useSelection';
 import { useTableCommands } from '../hooks/useTableCommands';
 import { useTaskActions } from '../hooks/useTaskActions';
@@ -60,6 +61,26 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
 
   useTerminalCursorVisibility();
 
+  const { preserveSelection, pendingLineNumber } = usePreserveSelection({
+    viewMode,
+    tableRows,
+    setTableSelectedIndex,
+    columns,
+    setCardSelection: selection.setColumnIndex
+  });
+
+  const effectiveSelection = useEffectiveSelection({
+    viewMode,
+    pendingLineNumber,
+    columns,
+    selection: {
+      selectedColumnKey: selection.selectedColumnKey,
+      selectedIndex: selection.selectedIndex
+    },
+    tableRows,
+    tableSelectedIndex
+  });
+
   const {
     applySubmit,
     toggleSelected,
@@ -73,11 +94,12 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     todoFilePath,
     viewMode,
     tableRows,
-    tableSelectedIndex,
-    selectionSelectedItem: selection.selectedItem,
+    tableSelectedIndex: effectiveSelection.tableSelectedIndex,
+    selectionSelectedItem: effectiveSelection.cardSelectedItem,
     mutateTodos,
     commandBar,
     onFilterApplied: () => setScrollOffset(0),
+    preserveSelection,
     exit
   });
 
@@ -104,9 +126,9 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   useViewportSelectionSync({
     viewMode,
     tableRowsLength: tableRows.length,
-    tableSelectedIndex,
+    tableSelectedIndex: effectiveSelection.tableSelectedIndex,
     setTableSelectedIndex,
-    cardSelectedIndex: selection.selectedIndex,
+    cardSelectedIndex: effectiveSelection.cardSelectedIndex,
     cardVisibleCount,
     tableVisibleCount,
     scrollOffset,
@@ -149,7 +171,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
       {viewMode === 'table' ? (
         <TableView
           rows={tableRows}
-          selectedIndex={tableSelectedIndex}
+          selectedIndex={effectiveSelection.tableSelectedIndex}
           scrollOffset={scrollOffset}
           visibleCount={tableVisibleCount}
           {...(tableSort ? { sort: tableSort } : {})}
@@ -157,8 +179,8 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
       ) : (
         <ColumnLayout
           columns={columns}
-          selectedColumn={selection.selectedColumnKey}
-          selectedIndex={selection.selectedIndex}
+          selectedColumn={effectiveSelection.cardSelectedColumn}
+          selectedIndex={effectiveSelection.cardSelectedIndex}
           scrollOffset={scrollOffset}
           visibleCount={cardVisibleCount}
         />

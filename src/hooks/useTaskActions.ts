@@ -20,7 +20,7 @@ type MutateTodos = (
     todoItems: TodoItem[],
     parseErrors: UnparseableTodoItem[]
   ) => Promise<(TodoItem | UnparseableTodoItem)[]> | (TodoItem | UnparseableTodoItem)[]
-) => void;
+) => Promise<void>;
 
 type CommandBarActions = {
   submit: () =>
@@ -46,6 +46,7 @@ type UseTaskActionsParams = {
   mutateTodos: MutateTodos;
   commandBar: CommandBarActions;
   onFilterApplied: () => void;
+  preserveSelection: (lineNumber: number) => void;
   exit: () => void;
 };
 
@@ -62,6 +63,7 @@ export const useTaskActions = ({
   mutateTodos,
   commandBar,
   onFilterApplied,
+  preserveSelection,
   exit
 }: UseTaskActionsParams) => {
   const doneFilePath = path.join(path.dirname(todoFilePath), DONE_FILE_NAME);
@@ -86,7 +88,7 @@ export const useTaskActions = ({
         return;
       }
 
-      mutateTodos((todoItems, parseErrors) => {
+      void mutateTodos((todoItems, parseErrors) => {
         const nextTodoItems = todoItems.map((todoItem) =>
           todoItem.lineNumber === selected.item.lineNumber ? changePriority(todoItem, action.priority) : todoItem
         );
@@ -104,7 +106,7 @@ export const useTaskActions = ({
         return;
       }
 
-      mutateTodos((todoItems, parseErrors) => {
+      void mutateTodos((todoItems, parseErrors) => {
         const nextTodoItems = todoItems.map((todoItem) =>
           todoItem.lineNumber === selected.item.lineNumber ? changeDescription(todoItem, action.description) : todoItem
         );
@@ -122,7 +124,7 @@ export const useTaskActions = ({
         return;
       }
 
-      mutateTodos((todoItems, parseErrors) => {
+      void mutateTodos((todoItems, parseErrors) => {
         const nextTodoItems = todoItems.map((todoItem) =>
           todoItem.lineNumber === selected.item.lineNumber ? changeDates(todoItem, action) : todoItem
         );
@@ -134,7 +136,7 @@ export const useTaskActions = ({
     }
 
     if (action.type === 'add') {
-      mutateTodos((todoItems, parseErrors) => {
+      void mutateTodos((todoItems, parseErrors) => {
         const maxLine = [...todoItems, ...parseErrors].reduce((max, line) => Math.max(max, line.lineNumber), 0);
         const created = addTask({
           lineNumber: maxLine + 1,
@@ -160,7 +162,9 @@ export const useTaskActions = ({
       return;
     }
 
-    mutateTodos((todoItems, parseErrors) => {
+    preserveSelection(selected.item.lineNumber);
+
+    void mutateTodos((todoItems, parseErrors) => {
       const nextTodoItems = todoItems.map((todoItem) =>
         todoItem.lineNumber === selected.item.lineNumber ? toggleCompletion(todoItem) : todoItem
       );
@@ -182,7 +186,9 @@ export const useTaskActions = ({
       return;
     }
 
-    mutateTodos((todoItems, parseErrors) => {
+    preserveSelection(selected.item.lineNumber);
+
+    void mutateTodos((todoItems, parseErrors) => {
       const nextTodoItems = todoItems.map((todoItem) =>
         todoItem.lineNumber === selected.item.lineNumber ? toggleDoing(todoItem) : todoItem
       );
@@ -193,7 +199,7 @@ export const useTaskActions = ({
   };
 
   const cleanCompleted = () => {
-    mutateTodos(async (todoItems, parseErrors) => {
+    void mutateTodos(async (todoItems, parseErrors) => {
       const { active, completed } = partitionCompleted(todoItems);
       if (completed.length === 0) {
         commandBar.setStatusText('No completed tasks to clean');
@@ -226,7 +232,7 @@ export const useTaskActions = ({
 
     const selectedLineNumber = selected.item.lineNumber;
 
-    mutateTodos((todoItems, parseErrors) => {
+    void mutateTodos((todoItems, parseErrors) => {
       const nextTodoItems = todoItems.filter((todoItem) => todoItem.lineNumber !== selectedLineNumber);
       const nextParseErrors = parseErrors.filter((parseError) => parseError.lineNumber !== selectedLineNumber);
 

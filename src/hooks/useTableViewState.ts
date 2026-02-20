@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import type { ColumnKey, Columns, DisplayTask } from '../logic/columns';
+import { findCardSelectionByLineNumber, findTableSelectionIndexByLineNumber } from '../logic/selection';
 import { type TableRow, type TableSort, sortTableRows } from '../logic/tableSort';
 
 type ViewMode = 'cards' | 'table';
@@ -23,28 +24,6 @@ const buildTableRows = (columns: Columns): TableRow[] => {
   ];
 };
 
-const findCardSelectionByLineNumber = (
-  columns: Columns,
-  lineNumber: number
-): { column: 'backlog' | 'doing' | 'done'; index: number } | undefined => {
-  const backlogIndex = columns.backlog.findIndex((task) => task.item.lineNumber === lineNumber);
-  if (backlogIndex >= 0) {
-    return { column: 'backlog', index: backlogIndex };
-  }
-
-  const doingIndex = columns.doing.findIndex((task) => task.item.lineNumber === lineNumber);
-  if (doingIndex >= 0) {
-    return { column: 'doing', index: doingIndex };
-  }
-
-  const doneIndex = columns.done.findIndex((task) => task.item.lineNumber === lineNumber);
-  if (doneIndex >= 0) {
-    return { column: 'done', index: doneIndex };
-  }
-
-  return undefined;
-};
-
 export const useTableViewState = ({ columns, selection }: UseTableViewStateParams) => {
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [tableSelectedIndex, setTableSelectedIndex] = useState(0);
@@ -56,8 +35,8 @@ export const useTableViewState = ({ columns, selection }: UseTableViewStateParam
   }, [columns, tableSort]);
 
   const setTableSelectionByLineNumber = (lineNumber: number, rows: TableRow[] = tableRows): boolean => {
-    const nextSelectedIndex = rows.findIndex((row) => row.task.item.lineNumber === lineNumber);
-    if (nextSelectedIndex < 0) {
+    const nextSelectedIndex = findTableSelectionIndexByLineNumber(rows, lineNumber);
+    if (nextSelectedIndex === undefined) {
       return false;
     }
 
