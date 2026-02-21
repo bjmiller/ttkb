@@ -1,7 +1,7 @@
 import type { ColumnKey, Columns } from './columns';
 import type { TableRow } from './tableSort';
 
-export type CardSelection = {
+type CardSelection = {
   column: ColumnKey;
   index: number;
 };

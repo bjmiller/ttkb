@@ -5,8 +5,8 @@ export type TableRow = {
   task: DisplayTask;
 };
 
-export type TableSortColumn = 'status' | 'priority' | 'created' | 'project' | 'context' | 'meta' | 'description';
-export type TableSortDirection = 'asc' | 'desc';
+type TableSortColumn = 'status' | 'priority' | 'created' | 'project' | 'context' | 'meta' | 'description';
+type TableSortDirection = 'asc' | 'desc';
 
 export type TableSort = {
   column: TableSortColumn;

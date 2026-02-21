@@ -30,7 +30,6 @@ export const UnparseableTodoItemSchema = type({
   error: 'string'
 });
 
-export type MetadataTag = typeof MetadataTagSchema.infer;
 export type TodoItem = typeof TodoItemSchema.infer;
 export type UnparseableTodoItem = typeof UnparseableTodoItemSchema.infer;
 export type ParsedTodoLine = TodoItem | UnparseableTodoItem;
