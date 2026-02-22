@@ -19,8 +19,6 @@ import { ColumnLayout } from './ColumnLayout';
 import { HelpOverlay } from './HelpOverlay';
 import { TableView } from './TableView';
 
-export { shouldClearFilterOnCancel } from '../hooks/useTableCommands';
-
 type AppProps = {
   todoFilePath: string;
   cursorStyle?: CursorStyle;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 
 import type { CommandBarState } from '../../hooks/useCommandBar';
-import { shouldClearFilterOnCancel } from '../App';
+import { shouldClearFilterOnCancel } from '../../hooks/useTableCommands';
 
 describe('shouldClearFilterOnCancel', () => {
   it('returns false when no filter is active', () => {
