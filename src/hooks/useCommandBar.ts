@@ -51,6 +51,10 @@ const datePrompt = (activeDateField: DateField, completed: boolean): string => {
   return 'Edit created date (YYYY-MM-DD, Tab to switch to completed): ';
 };
 
+const datePromptWithError = (activeDateField: DateField, completed: boolean, errorMessage: string): string => {
+  return `${errorMessage} ${datePrompt(activeDateField, completed)}`;
+};
+
 export const useCommandBar = () => {
   const [state, setState] = useState<CommandBarState>({ mode: 'idle' });
   const [statusText, setStatusText] = useState<string>('Ready');
@@ -327,17 +331,29 @@ export const useCommandBar = () => {
       const completionDate = state.activeDateField === 'completion' ? value || undefined : state.completionDate;
 
       if (creationDate && !DATE_PATTERN.test(creationDate)) {
+        setState({
+          ...state,
+          prompt: datePromptWithError(state.activeDateField, state.completed, 'Invalid created date.')
+        });
         setStatusText('Created date must be YYYY-MM-DD');
         return { type: 'none' };
       }
 
       if (state.completed) {
         if (!completionDate) {
+          setState({
+            ...state,
+            prompt: datePromptWithError(state.activeDateField, state.completed, 'Completed date is required.')
+          });
           setStatusText('Completed date is required for done tasks');
           return { type: 'none' };
         }
 
         if (!DATE_PATTERN.test(completionDate)) {
+          setState({
+            ...state,
+            prompt: datePromptWithError(state.activeDateField, state.completed, 'Invalid completed date.')
+          });
           setStatusText('Completed date must be YYYY-MM-DD');
           return { type: 'none' };
         }
