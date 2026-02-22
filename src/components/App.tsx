@@ -5,6 +5,7 @@ import type { CursorStyle } from '../config/types';
 
 import { useCommandBar } from '../hooks/useCommandBar';
 import { useKeyboardCommands } from '../hooks/useKeyboardCommands';
+import { useLayoutMetrics } from '../hooks/useLayoutMetrics';
 import { useEffectiveSelection, usePreserveSelection } from '../hooks/usePreserveSelection';
 import { useSelection } from '../hooks/useSelection';
 import { useTableCommands } from '../hooks/useTableCommands';
@@ -24,14 +25,8 @@ type AppProps = {
   cursorStyle?: CursorStyle;
 };
 
-const ESTIMATED_CARD_HEIGHT = 6;
-const RESERVED_BOTTOM_ROWS = 4;
-const DEFAULT_TERMINAL_HEIGHT = 24;
-const TABLE_ROW_HEIGHT = 1;
-
 export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   const { exit } = useApp();
-  const terminalHeight = process.stdout.rows ?? DEFAULT_TERMINAL_HEIGHT;
   const [scrollOffset, setScrollOffset] = useState(0);
 
   const { items, errors, status: fileStatus, error: fileError, mutateTodos } = useTodoFile(todoFilePath);
@@ -52,10 +47,6 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     toggleView,
     buildTableRows
   } = useTableViewState({ columns, selection });
-
-  const viewportRows = Math.max(1, terminalHeight - RESERVED_BOTTOM_ROWS);
-  const cardVisibleCount = Math.max(1, Math.floor(viewportRows / ESTIMATED_CARD_HEIGHT));
-  const tableVisibleCount = Math.max(1, Math.floor(viewportRows / TABLE_ROW_HEIGHT));
 
   useTerminalCursorVisibility();
 
@@ -78,6 +69,13 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     tableRows,
     tableSelectedIndex
   });
+
+  const { terminalHeight, tableVisibleCount, cardVisibleRows, cardContentWidth, cardVisibleCount, columnWidths } =
+    useLayoutMetrics({
+      columns,
+      selectedColumn: effectiveSelection.cardSelectedColumn,
+      scrollOffset
+    });
 
   const {
     applySubmit,
@@ -180,7 +178,9 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
           selectedColumn={effectiveSelection.cardSelectedColumn}
           selectedIndex={effectiveSelection.cardSelectedIndex}
           scrollOffset={scrollOffset}
-          visibleCount={cardVisibleCount}
+          visibleRows={cardVisibleRows}
+          cardContentWidth={cardContentWidth}
+          columnWidths={columnWidths}
         />
       )}
       {commandBar.state.mode === 'help' ? <HelpOverlay /> : null}

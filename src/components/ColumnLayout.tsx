@@ -9,7 +9,13 @@ type ColumnLayoutProps = {
   selectedColumn: ColumnKey;
   selectedIndex: number;
   scrollOffset: number;
-  visibleCount: number;
+  visibleRows: number;
+  cardContentWidth: number;
+  columnWidths: {
+    backlog: number;
+    doing: number;
+    done: number;
+  };
 };
 
 export const ColumnLayout = ({
@@ -17,7 +23,9 @@ export const ColumnLayout = ({
   selectedColumn,
   selectedIndex,
   scrollOffset,
-  visibleCount
+  visibleRows,
+  cardContentWidth,
+  columnWidths
 }: ColumnLayoutProps) => {
   return (
     <Box flexDirection="row" flexGrow={1}>
@@ -27,7 +35,9 @@ export const ColumnLayout = ({
         selectedIndex={selectedIndex}
         selectedColumn={selectedColumn === 'backlog'}
         scrollOffset={scrollOffset}
-        visibleCount={visibleCount}
+        visibleRows={visibleRows}
+        cardContentWidth={cardContentWidth}
+        width={columnWidths.backlog}
       />
       <Column
         title="Doing"
@@ -35,7 +45,9 @@ export const ColumnLayout = ({
         selectedIndex={selectedIndex}
         selectedColumn={selectedColumn === 'doing'}
         scrollOffset={scrollOffset}
-        visibleCount={visibleCount}
+        visibleRows={visibleRows}
+        cardContentWidth={cardContentWidth}
+        width={columnWidths.doing}
       />
       <Column
         title="Done"
@@ -43,7 +55,9 @@ export const ColumnLayout = ({
         selectedIndex={selectedIndex}
         selectedColumn={selectedColumn === 'done'}
         scrollOffset={scrollOffset}
-        visibleCount={visibleCount}
+        visibleRows={visibleRows}
+        cardContentWidth={cardContentWidth}
+        width={columnWidths.done}
       />
     </Box>
   );
