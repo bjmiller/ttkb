@@ -2,6 +2,10 @@
 
 Terminal Kanban viewer/editor for `todo.txt` files.
 
+## Requirements
+
+For ttkb to look correct, you should be using a modern terminal program, and you must also use a [Nerd Font](https://www.nerdfonts.com) in your terminal.
+
 ## Configuration
 
 ttkb loads config from the first file found in:
