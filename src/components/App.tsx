@@ -25,6 +25,8 @@ type AppProps = {
   cursorStyle?: CursorStyle;
 };
 
+const COMMAND_BAR_ROWS = 3;
+
 export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   const { exit } = useApp();
   const [scrollOffset, setScrollOffset] = useState(0);
@@ -76,6 +78,8 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
       selectedColumn: effectiveSelection.cardSelectedColumn,
       scrollOffset
     });
+
+  const helpRows = Math.max(1, terminalHeight - COMMAND_BAR_ROWS);
 
   const {
     applySubmit,
@@ -164,7 +168,9 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
 
   return (
     <Box flexDirection="column" height={terminalHeight}>
-      {viewMode === 'table' ? (
+      {commandBar.state.mode === 'help' ? (
+        <HelpOverlay maxRows={helpRows} />
+      ) : viewMode === 'table' ? (
         <TableView
           rows={tableRows}
           selectedIndex={effectiveSelection.tableSelectedIndex}
@@ -183,7 +189,6 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
           columnWidths={columnWidths}
         />
       )}
-      {commandBar.state.mode === 'help' ? <HelpOverlay /> : null}
       <CommandBar
         state={commandBar.state}
         status={commandBar.statusText}
