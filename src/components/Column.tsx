@@ -17,6 +17,9 @@ type ColumnProps = {
   width: number;
 };
 
+const OFFSCREEN_ABOVE_GLYPH = '\uf102';
+const OFFSCREEN_BELOW_GLYPH = '\uf103';
+
 const ColumnComponent = ({
   title,
   tasks,
@@ -37,9 +40,15 @@ const ColumnComponent = ({
     [tasks, scrollOffset, visibleCount]
   );
 
+  const hasOffscreenAbove = scrollOffset > 0 && tasks.length > 0;
+  const hasOffscreenBelow = scrollOffset + visibleCount < tasks.length;
+
   return (
     <Box flexDirection="column" width={width} paddingX={1}>
-      <Text bold>{title}</Text>
+      <Text bold>
+        {hasOffscreenAbove ? <Text color="red">{OFFSCREEN_ABOVE_GLYPH} </Text> : null}
+        {title}
+      </Text>
       <Box flexDirection="column" marginTop={0}>
         {visibleTasks.length === 0 ? <Text dimColor>(empty)</Text> : null}
         {visibleTasks.map((task, index) => {
@@ -54,6 +63,11 @@ const ColumnComponent = ({
 
           return <TaskCard key={`todo-${task.item.lineNumber}`} item={task.item} selected={selected} />;
         })}
+        {hasOffscreenBelow ? (
+          <Text bold color="red">
+            {OFFSCREEN_BELOW_GLYPH}
+          </Text>
+        ) : null}
       </Box>
     </Box>
   );
