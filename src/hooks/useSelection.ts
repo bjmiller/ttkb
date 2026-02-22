@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { getWrappedHorizontalColumnIndex, getWrappedVerticalIndex } from '../logic/selectionNavigation';
 import type { ColumnKey, Columns } from '../logic/columns';
 
 const ORDER: ColumnKey[] = ['backlog', 'doing', 'done'];
@@ -48,37 +49,48 @@ export const useSelection = (columns: Columns) => {
   }, [columns]);
 
   const moveUp = () => {
-    setSelection((current) => ({
-      ...current,
-      index: Math.max(0, current.index - 1)
-    }));
+    setSelection((current) => {
+      const count = columns[getColumnKey(current.column)].length;
+      if (count === 0) {
+        return current;
+      }
+
+      return {
+        ...current,
+        index: getWrappedVerticalIndex(current.index, count, -1)
+      };
+    });
   };
 
   const moveDown = () => {
     setSelection((current) => {
       const count = columns[getColumnKey(current.column)].length;
+      if (count === 0) {
+        return current;
+      }
+
       return {
         ...current,
-        index: Math.min(Math.max(count - 1, 0), current.index + 1)
+        index: getWrappedVerticalIndex(current.index, count, 1)
       };
     });
   };
 
   const moveHorizontal = (direction: -1 | 1) => {
     setSelection((current) => {
-      let target = current.column + direction;
-      while (target >= 0 && target < ORDER.length && columns[getColumnKey(target)].length === 0) {
-        target += direction;
-      }
-
-      if (target < 0 || target >= ORDER.length) {
+      const nextColumn = getWrappedHorizontalColumnIndex(
+        current.column,
+        direction,
+        ORDER.map((key) => columns[key].length)
+      );
+      if (nextColumn === undefined) {
         return current;
       }
 
-      const targetLength = columns[getColumnKey(target)].length;
+      const targetLength = columns[getColumnKey(nextColumn)].length;
       return {
-        column: target,
-        index: Math.min(current.index, Math.max(targetLength - 1, 0))
+        column: nextColumn,
+        index: Math.min(current.index, targetLength - 1)
       };
     });
   };
