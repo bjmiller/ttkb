@@ -6,6 +6,21 @@ Terminal Kanban viewer/editor for `todo.txt` files.
 
 For ttkb to look correct, you should be using a modern terminal program, and you must also use a [Nerd Font](https://www.nerdfonts.com) in your terminal.
 
+You can place your todo.txt file in any directory, but the file must be named "todo.txt", and its companion file "done.txt" must be in the same directory, and must have the name "done.txt".
+
+## Installation
+
+Installation is a bit manual at the moment.  You can follow these steps:
+
+- Make sure that you have the most recent version of [Bun](https://bun.com/) installed.
+- Clone this repository.
+- Use `cd` to go to the project root.
+- Run `bun install` to bring in dependencies.
+- Run `bun run build` to create a binary that targets your local system.
+- Copy the resulting `ttkb` executable file from the /dist directory into a directory that's on your path.
+
+At some point, there may be pre-built executables, which will make all of this a lot simpler.
+
 ## Configuration
 
 ttkb loads config from the first file found in:
@@ -43,8 +58,6 @@ If `cursorBlink` is set, it overrides detected/default blink behavior.
 }
 ```
 
-`done.txt` is always written in the same directory as the resolved `todo.txt`.
-
 ## Commands
 
 ### Navigation
@@ -74,3 +87,9 @@ If `cursorBlink` is set, it overrides detected/default blink behavior.
 
 - `Esc`: cancel current prompt/confirmation
 - `Shift+Q`: open quit confirmation
+
+## Notes and design decisions
+
+- A task is in the "doing" state if it has a metadata key of `status:doing`.
+- Tasks that are marked "done" lose their priority indicator, but preserve it as a metadata tag called `pri`.
+- The concept of "recurring" tasks are intentionally not supported.
