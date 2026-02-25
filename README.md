@@ -10,16 +10,11 @@ You can place your todo.txt file in any directory, but the file must be named "t
 
 ## Installation
 
-Installation is a bit manual at the moment. You can follow these steps:
+- Go to [the latest github release](https://github.com/bjmiller/ttkb/releases/latest).
+- Download the correct binary for your architecture.
+- Unzip the file.
+- Copy the `ttkb` file to a directory in your path.
 
-- Make sure that you have the most recent version of [Bun](https://bun.com/) installed.
-- Clone this repository.
-- Use `cd` to go to the project root.
-- Run `bun install` to bring in dependencies.
-- Run `bun run build` to create a binary that targets your local system.
-- Copy the resulting `ttkb` executable file from the /dist directory into a directory that's on your path.
-
-At some point, there may be pre-built executables, which will make all of this a lot simpler.
 
 ## Configuration
 
