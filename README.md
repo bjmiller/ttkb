@@ -10,7 +10,7 @@ You can place your todo.txt file in any directory, but the file must be named "t
 
 ## Installation
 
-Installation is a bit manual at the moment.  You can follow these steps:
+Installation is a bit manual at the moment. You can follow these steps:
 
 - Make sure that you have the most recent version of [Bun](https://bun.com/) installed.
 - Clone this repository.
