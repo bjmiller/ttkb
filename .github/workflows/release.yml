@@ -35,6 +35,8 @@ jobs:
         run: |
           set -euo pipefail
 
+          bun install
+
           tag="${GITHUB_REF_NAME}"
           out_dir="dist/release"
           mkdir -p "${out_dir}"
