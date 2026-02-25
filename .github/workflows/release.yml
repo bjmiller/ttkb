@@ -57,14 +57,17 @@ jobs:
               extension=".exe"
             fi
 
-            binary_name="ttkb-${tag}-${target}${extension}"
             zip_name="ttkb-${tag}-${target}.zip"
+            target_dir="${out_dir}/${target}"
+            build_out="${target_dir}/ttkb${extension}"
 
-            bun build ./index.tsx --compile --target="${target}" --outfile "${out_dir}/${binary_name}"
+            mkdir -p "${target_dir}"
+
+            bun build ./index.tsx --compile --target="${target}" --outfile "${build_out}"
 
             (
-              cd "${out_dir}"
-              zip -q -9 "${zip_name}" "${binary_name}"
+              cd "${target_dir}"
+              zip -q -9 "${out_dir}/${zip_name}" "ttkb${extension}"
             )
           done
 
