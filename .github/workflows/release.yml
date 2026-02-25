@@ -38,7 +38,8 @@ jobs:
           bun install
 
           tag="${GITHUB_REF_NAME}"
-          out_dir="dist/release"
+          repo_root="${GITHUB_WORKSPACE}"
+          out_dir="${repo_root}/dist/release"
           mkdir -p "${out_dir}"
 
           targets=(
