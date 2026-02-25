@@ -11,6 +11,7 @@ type CommandBarProps = {
   cursorStyle?: CursorStyle;
   fileError?: string;
   filter?: string;
+  helpBuildInfo?: string;
 };
 
 const CURSOR_BLINK_INTERVAL_MS = 530;
@@ -22,7 +23,15 @@ const CURSOR_GLYPH_BY_STYLE: Record<CursorStyle['shape'], string> = {
   underline: '▁'
 };
 
-export const CommandBar = ({ state, status, fileStatus, cursorStyle, fileError, filter }: CommandBarProps) => {
+export const CommandBar = ({
+  state,
+  status,
+  fileStatus,
+  cursorStyle,
+  fileError,
+  filter,
+  helpBuildInfo
+}: CommandBarProps) => {
   const resolvedCursorStyle: CursorStyle = cursorStyle ?? { shape: 'block', blink: false };
   const cursorGlyph = CURSOR_GLYPH_BY_STYLE[resolvedCursorStyle.shape];
   const [blinkVisible, setBlinkVisible] = useState(true);
@@ -51,7 +60,10 @@ export const CommandBar = ({ state, status, fileStatus, cursorStyle, fileError, 
       ) : state.mode === 'confirm' ? (
         <Text color="yellow">{state.prompt}</Text>
       ) : state.mode === 'help' ? (
-        <Text color="yellow">Press any key to dismiss help</Text>
+        <Box width="100%" justifyContent="space-between">
+          <Text color="yellow">Press any key to dismiss help</Text>
+          {helpBuildInfo ? <Text dimColor>{helpBuildInfo}</Text> : null}
+        </Box>
       ) : (
         <Text>
           {status} | {fileStatus}

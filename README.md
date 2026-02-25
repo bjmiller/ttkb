@@ -15,7 +15,6 @@ You can place your todo.txt file in any directory, but the file must be named "t
 - Unzip the file.
 - Copy the `ttkb` file to a directory in your path.
 
-
 ## Configuration
 
 ttkb loads config from the first file found in:

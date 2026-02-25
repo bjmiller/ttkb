@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Box, useApp } from 'ink';
 
+import { HELP_BUILD_INFO } from '../buildInfo';
 import type { CursorStyle } from '../config/types';
 
 import { useCommandBar } from '../hooks/useCommandBar';
@@ -193,6 +194,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
         state={commandBar.state}
         status={commandBar.statusText}
         fileStatus={fileStatus}
+        helpBuildInfo={HELP_BUILD_INFO}
         {...(cursorStyle ? { cursorStyle } : {})}
         {...(fileError ? { fileError } : {})}
         {...(commandBar.filter ? { filter: commandBar.filter } : {})}

@@ -38,6 +38,8 @@ jobs:
           bun install
 
           tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+          commit="${GITHUB_SHA::7}"
           repo_root="${GITHUB_WORKSPACE}"
           out_dir="${repo_root}/dist/release"
           mkdir -p "${out_dir}"
@@ -64,7 +66,11 @@ jobs:
 
             mkdir -p "${target_dir}"
 
-            bun build ./index.tsx --compile --target="${target}" --outfile "${build_out}"
+            bun run ./scripts/build-executable.ts \
+              --target "${target}" \
+              --outfile "${build_out}" \
+              --version "${version}" \
+              --commit "${commit}"
 
             (
               cd "${target_dir}"
