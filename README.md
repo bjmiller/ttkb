@@ -92,4 +92,4 @@ If `cursorBlink` is set, it overrides detected/default blink behavior.
 
 - A task is in the "doing" state if it has a metadata key of `status:doing`.
 - Tasks that are marked "done" lose their priority indicator, but preserve it as a metadata tag called `pri`.
-- The concept of "recurring" tasks are intentionally not supported.
+- The concept of "recurring" tasks is intentionally not supported.

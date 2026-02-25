@@ -1,0 +1,83 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Build and publish release assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Write is required here to publish the binaries.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@3d267786b128fe76c2f16a390aa2448b815359f3 # v2
+        with:
+          no-cache: true
+
+      - name: Build single-file executables
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          out_dir="dist/release"
+          mkdir -p "${out_dir}"
+
+          targets=(
+            "bun-darwin-x64"
+            "bun-darwin-arm64"
+            "bun-linux-x64"
+            "bun-linux-arm64"
+            "bun-linux-x64-musl"
+            "bun-linux-arm64-musl"
+            "bun-windows-x64"
+          )
+
+          for target in "${targets[@]}"; do
+            extension=""
+            if [[ "${target}" == bun-windows-* ]]; then
+              extension=".exe"
+            fi
+
+            binary_name="ttkb-${tag}-${target}${extension}"
+            zip_name="ttkb-${tag}-${target}.zip"
+
+            bun build ./index.tsx --compile --target="${target}" --outfile "${out_dir}/${binary_name}"
+
+            (
+              cd "${out_dir}"
+              zip -q -9 "${zip_name}" "${binary_name}"
+            )
+          done
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          assets=(dist/release/*.zip)
+
+          if gh release view "${tag}" >/dev/null 2>&1; then
+            gh release upload "${tag}" "${assets[@]}" --clobber
+          else
+            gh release create "${tag}" "${assets[@]}" --title "${tag}" --generate-notes
+          fi
