@@ -1,15 +1,9 @@
 import { buildColumns, type Columns } from '../logic/columns';
-import {
-  FIRST_SORT_COLUMN,
-  TABLE_SORT_COLUMNS,
-  type TableRow,
-  type TableSort,
-  sortTableRows
-} from '../logic/tableSort';
+import type { TableRow, TableSort } from '../logic/tableTypes';
+import { FIRST_SORT_COLUMN, TABLE_SORT_COLUMNS, sortTableRows } from '../logic/tableSort';
 import type { TodoItem, UnparseableTodoItem } from '../parser/types';
+import type { ViewMode } from '../types';
 import type { CommandBarState } from './useCommandBar';
-
-type ViewMode = 'cards' | 'table';
 
 type CommandBarActions = {
   filter: string | undefined;
@@ -59,27 +53,26 @@ export const useTableCommands = ({
   commandBar,
   onViewModeChanged
 }: UseTableCommandsParams) => {
+  const syncSelectionToRows = (nextRows: TableRow[]) => {
+    const selected = tableRows[tableSelectedIndex]?.task;
+    if (!selected) {
+      return;
+    }
+
+    const nextIndex = nextRows.findIndex((row) => row.task.item.lineNumber === selected.item.lineNumber);
+    if (nextIndex >= 0) {
+      setTableSelectedIndex(nextIndex);
+    }
+  };
+
   const clearFilter = () => {
     if (viewMode !== 'table') {
       commandBar.clearFilter();
       return;
     }
 
-    const selected = tableRows[tableSelectedIndex]?.task;
-
-    if (selected) {
-      const unfilteredColumns = buildColumns(items, errors, undefined);
-      const unfilteredRowsBase = buildTableRows(unfilteredColumns);
-      const unfilteredRows = sortTableRows(unfilteredRowsBase, tableSort);
-      const nextSelectedIndex = unfilteredRows.findIndex(
-        (row) => row.task.item.lineNumber === selected.item.lineNumber
-      );
-
-      if (nextSelectedIndex >= 0) {
-        setTableSelectedIndex(nextSelectedIndex);
-      }
-    }
-
+    const unfilteredColumns = buildColumns(items, errors, undefined);
+    syncSelectionToRows(sortTableRows(buildTableRows(unfilteredColumns), tableSort));
     commandBar.clearFilter();
   };
 
@@ -104,18 +97,7 @@ export const useTableCommands = ({
     }
 
     if (viewMode === 'table' && commandBar.state.mode === 'idle' && tableSort) {
-      const selected = tableRows[tableSelectedIndex]?.task;
-      const unsortedRows = buildTableRows(columns);
-
-      if (selected) {
-        const nextSelectedIndex = unsortedRows.findIndex(
-          (row) => row.task.item.lineNumber === selected.item.lineNumber
-        );
-        if (nextSelectedIndex >= 0) {
-          setTableSelectedIndex(nextSelectedIndex);
-        }
-      }
-
+      syncSelectionToRows(buildTableRows(columns));
       setTableSort(undefined);
       commandBar.setStatusText('Table sort cleared');
       return;
@@ -129,7 +111,6 @@ export const useTableCommands = ({
       return;
     }
 
-    const selected = tableRows[tableSelectedIndex]?.task;
     const baseRows = buildTableRows(columns);
     const nextSort: TableSort = (() => {
       if (!tableSort) {
@@ -143,14 +124,7 @@ export const useTableCommands = ({
 
     const nextRows = sortTableRows(baseRows, nextSort);
     setTableSort(nextSort);
-
-    if (selected) {
-      const nextIndex = nextRows.findIndex((row) => row.task.item.lineNumber === selected.item.lineNumber);
-      if (nextIndex >= 0) {
-        setTableSelectedIndex(nextIndex);
-      }
-    }
-
+    syncSelectionToRows(nextRows);
     commandBar.setStatusText(`Sort: ${nextSort.column} (${nextSort.direction})`);
   };
 
@@ -159,23 +133,13 @@ export const useTableCommands = ({
       return;
     }
 
-    const selected = tableRows[tableSelectedIndex]?.task;
-
     const nextSort: TableSort = {
       column: tableSort.column,
       direction: tableSort.direction === 'asc' ? 'desc' : 'asc'
     };
-    const baseRows = buildTableRows(columns);
-    const nextRows = sortTableRows(baseRows, nextSort);
+    const nextRows = sortTableRows(buildTableRows(columns), nextSort);
     setTableSort(nextSort);
-
-    if (selected) {
-      const nextIndex = nextRows.findIndex((row) => row.task.item.lineNumber === selected.item.lineNumber);
-      if (nextIndex >= 0) {
-        setTableSelectedIndex(nextIndex);
-      }
-    }
-
+    syncSelectionToRows(nextRows);
     commandBar.setStatusText(`Sort: ${nextSort.column} (${nextSort.direction})`);
   };
 

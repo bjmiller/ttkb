@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { getWrappedHorizontalColumnIndex, getWrappedVerticalIndex } from '../logic/selectionNavigation';
 import type { ColumnKey, Columns } from '../logic/columns';
@@ -110,17 +110,14 @@ export const useSelection = (columns: Columns) => {
   const selectedColumnKey = getColumnKey(selection.column);
   const selectedItem = columns[selectedColumnKey][selection.index];
 
-  return useMemo(
-    () => ({
-      selectedColumnKey,
-      selectedIndex: selection.index,
-      selectedItem,
-      moveUp,
-      moveDown,
-      moveLeft: () => moveHorizontal(-1),
-      moveRight: () => moveHorizontal(1),
-      setColumnIndex
-    }),
-    [selectedColumnKey, selection.index, selectedItem]
-  );
+  return {
+    selectedColumnKey,
+    selectedIndex: selection.index,
+    selectedItem,
+    moveUp,
+    moveDown,
+    moveLeft: () => moveHorizontal(-1),
+    moveRight: () => moveHorizontal(1),
+    setColumnIndex
+  };
 };

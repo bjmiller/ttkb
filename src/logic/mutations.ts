@@ -1,4 +1,4 @@
-import type { TodoItem } from '../parser/types';
+import { PRIORITY_TAG_KEY, type TodoItem } from '../parser/types';
 
 type DateChanges = {
   creationDate: string | undefined;
@@ -12,8 +12,6 @@ const today = (): string => new Date().toISOString().slice(0, ISO_DATE_END_INDEX
 const withoutStatusDoing = (item: TodoItem): TodoItem['metadata'] => {
   return item.metadata.filter((tag) => !(tag.key === 'status' && tag.value === 'doing'));
 };
-
-const PRIORITY_TAG_KEY = 'pri';
 
 const withoutPriorityTag = (metadata: TodoItem['metadata']): TodoItem['metadata'] => {
   return metadata.filter((tag) => tag.key !== PRIORITY_TAG_KEY);
@@ -129,22 +127,24 @@ export const changeDescription = (item: TodoItem, description: string): TodoItem
 };
 
 export const changeDates = (item: TodoItem, changes: DateChanges): TodoItem => {
-  const nextWithCreation = changes.creationDate
-    ? { ...item, creationDate: changes.creationDate, dirty: true }
-    : (() => {
-        const { creationDate: _creationDate, ...withoutCreationDate } = item;
-        return { ...withoutCreationDate, dirty: true };
-      })();
+  let nextItem: TodoItem;
+
+  if (changes.creationDate) {
+    nextItem = { ...item, creationDate: changes.creationDate, dirty: true };
+  } else {
+    const { creationDate: _creationDate, ...withoutCreationDate } = item;
+    nextItem = { ...withoutCreationDate, dirty: true };
+  }
 
   if (item.completed && changes.completionDate) {
     return {
-      ...nextWithCreation,
+      ...nextItem,
       completionDate: changes.completionDate,
       dirty: true
     };
   }
 
-  return nextWithCreation;
+  return nextItem;
 };
 
 export const toggleDoing = (item: TodoItem): TodoItem => {

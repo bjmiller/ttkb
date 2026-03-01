@@ -1,6 +1,8 @@
 import path from 'node:path';
 
-import type { AppConfig, AppConfigFile } from './types';
+import { type } from 'arktype';
+
+import { AppConfigFileSchema, type AppConfig } from './types';
 
 type ResolvedAppConfig = {
   todoFilePath: string;
@@ -124,30 +126,22 @@ const resolveTodoFilePathFromDirectory = (directory: string): string => {
   return path.join(directory, TODO_FILE_NAME);
 };
 
-const isObjectRecord = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
-const isCursorStyle = (value: unknown): value is NonNullable<AppConfig['cursorStyle']> => {
-  return value === 'native' || value === 'block' || value === 'bar' || value === 'underline';
-};
-
 const sanitizeConfig = (parsed: unknown): ResolvedAppConfig => {
-  if (!isObjectRecord(parsed)) {
+  const result = AppConfigFileSchema(parsed);
+
+  if (result instanceof type.errors) {
     return DEFAULT_CONFIG;
   }
 
-  const configFile = parsed as AppConfigFile;
-
   const todoFilePath =
-    typeof configFile.todoDirectoryPath === 'string'
-      ? resolveTodoFilePathFromDirectory(configFile.todoDirectoryPath)
+    result.todoDirectoryPath !== undefined
+      ? resolveTodoFilePathFromDirectory(result.todoDirectoryPath)
       : DEFAULT_CONFIG.todoFilePath;
 
   return {
     todoFilePath,
-    cursorStyle: isCursorStyle(configFile.cursorStyle) ? configFile.cursorStyle : DEFAULT_CONFIG.cursorStyle,
-    cursorBlink: typeof configFile.cursorBlink === 'boolean' ? configFile.cursorBlink : DEFAULT_CONFIG.cursorBlink
+    cursorStyle: result.cursorStyle ?? DEFAULT_CONFIG.cursorStyle,
+    cursorBlink: result.cursorBlink ?? DEFAULT_CONFIG.cursorBlink
   };
 };
 

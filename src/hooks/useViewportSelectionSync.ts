@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-type ViewMode = 'cards' | 'table';
+import type { ViewMode } from '../types';
 
 type UseViewportSelectionSyncParams = {
   viewMode: ViewMode;

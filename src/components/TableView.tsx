@@ -1,12 +1,15 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 
-import type { ColumnKey, DisplayTask } from '../logic/columns';
-
-type TableRow = {
-  status: ColumnKey;
-  task: DisplayTask;
-};
+import type { ColumnKey } from '../logic/columns';
+import type { TableRow, TableSortColumn } from '../logic/tableTypes';
+import {
+  formatContexts,
+  formatDoneCallout,
+  formatMeta,
+  formatPrimaryLine,
+  formatProjects
+} from '../logic/taskFormatting';
 
 type TableViewProps = {
   rows: TableRow[];
@@ -14,12 +17,12 @@ type TableViewProps = {
   scrollOffset: number;
   visibleCount: number;
   sort?: {
-    column: 'status' | 'priority' | 'created' | 'project' | 'context' | 'meta' | 'description';
+    column: TableSortColumn;
     direction: 'asc' | 'desc';
   };
 };
 
-type SortColumn = NonNullable<TableViewProps['sort']>['column'];
+type SortColumn = TableSortColumn;
 
 const ROW_NUMBER_WIDTH = 4;
 const STATUS_WIDTH = 8;
@@ -78,20 +81,15 @@ const getRowCellValues = (row: TableRow): RowCellValues => {
   }
 
   const { item } = row.task;
-  const doneLine = ['x', item.completionDate, item.creationDate, item.description]
-    .filter((segment): segment is string => Boolean(segment))
-    .join(' ');
-  const descriptionValue = item.completed
-    ? doneLine
-    : `${item.priority ? `(${item.priority}) ` : ''}${item.creationDate ? `${item.creationDate} ` : ''}${item.description}`;
-  const doneCallout = !item.completed && item.completionDate ? `done: ${item.completionDate}` : undefined;
+  const descriptionValue = formatPrimaryLine(item);
+  const doneCallout = formatDoneCallout(item);
 
   return {
     priority: item.priority ?? '-',
     created: item.creationDate ?? '-',
-    project: item.projects.length > 0 ? item.projects.map((value) => `+${value}`).join(' ') : '-',
-    context: item.contexts.length > 0 ? item.contexts.map((value) => `@${value}`).join(' ') : '-',
-    meta: item.metadata.length > 0 ? item.metadata.map((tag) => `${tag.key}:${tag.value}`).join(' ') : '-',
+    project: item.projects.length > 0 ? formatProjects(item.projects) : '-',
+    context: item.contexts.length > 0 ? formatContexts(item.contexts) : '-',
+    meta: item.metadata.length > 0 ? formatMeta(item.metadata) : '-',
     description: doneCallout ? `${descriptionValue} ${doneCallout}` : descriptionValue
   };
 };

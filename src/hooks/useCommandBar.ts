@@ -55,6 +55,24 @@ const datePromptWithError = (activeDateField: DateField, completed: boolean, err
   return `${errorMessage} ${datePrompt(activeDateField, completed)}`;
 };
 
+const applyDateInputValue = (current: DateInputMode, nextValue: string): DateInputMode => {
+  if (current.activeDateField === 'completion') {
+    if (!nextValue) {
+      const { completionDate: _completionDate, ...rest } = current;
+      return { ...rest, value: nextValue };
+    }
+
+    return { ...current, value: nextValue, completionDate: nextValue };
+  }
+
+  if (!nextValue) {
+    const { creationDate: _creationDate, ...rest } = current;
+    return { ...rest, value: nextValue };
+  }
+
+  return { ...current, value: nextValue, creationDate: nextValue };
+};
+
 export const useCommandBar = () => {
   const [state, setState] = useState<CommandBarState>({ mode: 'idle' });
   const [statusText, setStatusText] = useState<string>('Ready');
@@ -158,35 +176,7 @@ export const useCommandBar = () => {
       const nextValue = `${current.value}${value}`;
 
       if (current.kind === 'edit-date') {
-        if (current.activeDateField === 'completion') {
-          if (!nextValue) {
-            const { completionDate: _completionDate, ...withoutCompletionDate } = current;
-            return {
-              ...withoutCompletionDate,
-              value: nextValue
-            };
-          }
-
-          return {
-            ...current,
-            value: nextValue,
-            completionDate: nextValue
-          };
-        }
-
-        if (!nextValue) {
-          const { creationDate: _creationDate, ...withoutCreationDate } = current;
-          return {
-            ...withoutCreationDate,
-            value: nextValue
-          };
-        }
-
-        return {
-          ...current,
-          value: nextValue,
-          creationDate: nextValue
-        };
+        return applyDateInputValue(current, nextValue);
       }
 
       return {
@@ -205,35 +195,7 @@ export const useCommandBar = () => {
       const nextValue = current.value.slice(0, Math.max(current.value.length - 1, 0));
 
       if (current.kind === 'edit-date') {
-        if (current.activeDateField === 'completion') {
-          if (!nextValue) {
-            const { completionDate: _completionDate, ...withoutCompletionDate } = current;
-            return {
-              ...withoutCompletionDate,
-              value: nextValue
-            };
-          }
-
-          return {
-            ...current,
-            value: nextValue,
-            completionDate: nextValue
-          };
-        }
-
-        if (!nextValue) {
-          const { creationDate: _creationDate, ...withoutCreationDate } = current;
-          return {
-            ...withoutCreationDate,
-            value: nextValue
-          };
-        }
-
-        return {
-          ...current,
-          value: nextValue,
-          creationDate: nextValue
-        };
+        return applyDateInputValue(current, nextValue);
       }
 
       return {

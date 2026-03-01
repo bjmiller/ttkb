@@ -1,17 +1,7 @@
-import type { ColumnKey, DisplayTask } from './columns';
+import { formatContexts, formatDoneCallout, formatMeta, formatPrimaryLine, formatProjects } from './taskFormatting';
+import type { TableRow, TableSort, TableSortColumn } from './tableTypes';
 
-export type TableRow = {
-  status: ColumnKey;
-  task: DisplayTask;
-};
-
-type TableSortColumn = 'status' | 'priority' | 'created' | 'project' | 'context' | 'meta' | 'description';
-type TableSortDirection = 'asc' | 'desc';
-
-export type TableSort = {
-  column: TableSortColumn;
-  direction: TableSortDirection;
-};
+export type { TableRow, TableSort, TableSortColumn };
 
 export const TABLE_SORT_COLUMNS: TableSortColumn[] = [
   'status',
@@ -53,24 +43,19 @@ export const getSortValue = (row: TableRow, column: TableSortColumn): string => 
   }
 
   if (column === 'project') {
-    return item.projects.length > 0 ? item.projects.map((value) => `+${value}`).join(' ') : '-';
+    return item.projects.length > 0 ? formatProjects(item.projects) : '-';
   }
 
   if (column === 'context') {
-    return item.contexts.length > 0 ? item.contexts.map((value) => `@${value}`).join(' ') : '-';
+    return item.contexts.length > 0 ? formatContexts(item.contexts) : '-';
   }
 
   if (column === 'meta') {
-    return item.metadata.length > 0 ? item.metadata.map((tag) => `${tag.key}:${tag.value}`).join(' ') : '-';
+    return item.metadata.length > 0 ? formatMeta(item.metadata) : '-';
   }
 
-  const doneLine = ['x', item.completionDate, item.creationDate, item.description]
-    .filter((segment): segment is string => Boolean(segment))
-    .join(' ');
-  const descriptionValue = item.completed
-    ? doneLine
-    : `${item.priority ? `(${item.priority}) ` : ''}${item.creationDate ? `${item.creationDate} ` : ''}${item.description}`;
-  const doneCallout = !item.completed && item.completionDate ? `done: ${item.completionDate}` : undefined;
+  const descriptionValue = formatPrimaryLine(item);
+  const doneCallout = formatDoneCallout(item);
 
   return doneCallout ? `${descriptionValue} ${doneCallout}` : descriptionValue;
 };

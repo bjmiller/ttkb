@@ -2,9 +2,9 @@ import { useMemo, useState } from 'react';
 
 import type { ColumnKey, Columns, DisplayTask } from '../logic/columns';
 import { findCardSelectionByLineNumber, findTableSelectionIndexByLineNumber } from '../logic/selection';
-import { type TableRow, type TableSort, sortTableRows } from '../logic/tableSort';
-
-type ViewMode = 'cards' | 'table';
+import type { TableRow, TableSort } from '../logic/tableTypes';
+import { sortTableRows } from '../logic/tableSort';
+import type { ViewMode } from '../types';
 
 type SelectionBridge = {
   selectedItem: DisplayTask | undefined;

@@ -12,8 +12,8 @@ import {
 } from '../logic/mutations';
 import { appendLinesToFile } from '../logic/persistence';
 import type { TodoItem, UnparseableTodoItem } from '../parser/types';
-
-type ViewMode = 'cards' | 'table';
+import { byLineNumber } from '../logic/ordering';
+import { type ViewMode } from '../types';
 
 type MutateTodos = (
   updater: (
@@ -51,8 +51,6 @@ type UseTaskActionsParams = {
 };
 
 const DONE_FILE_NAME = 'done.txt';
-
-const byLineNumber = <T extends { lineNumber: number }>(left: T, right: T) => left.lineNumber - right.lineNumber;
 
 export const useTaskActions = ({
   todoFilePath,

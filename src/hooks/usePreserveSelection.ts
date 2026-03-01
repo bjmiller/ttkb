@@ -2,9 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 
 import type { ColumnKey, Columns, DisplayTask } from '../logic/columns';
 import { findCardSelectionByLineNumber, findTableSelectionIndexByLineNumber } from '../logic/selection';
-import type { TableRow } from '../logic/tableSort';
-
-type ViewMode = 'cards' | 'table';
+import type { TableRow } from '../logic/tableTypes';
+import type { ViewMode } from '../types';
 
 type UsePreserveSelectionParams = {
   viewMode: ViewMode;

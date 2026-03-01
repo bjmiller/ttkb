@@ -4,8 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { readTodoFile, writeTodoFileAtomic } from '../logic/persistence';
 import type { ParsedTodoLine, TodoItem, UnparseableTodoItem } from '../parser/types';
-
-const byLineNumber = (left: ParsedTodoLine, right: ParsedTodoLine): number => left.lineNumber - right.lineNumber;
+import { byLineNumber } from '../logic/ordering';
 
 export const useTodoFile = (filePath: string) => {
   const [lines, setLines] = useState<ParsedTodoLine[]>([]);

@@ -1,6 +1,7 @@
 import {
   DATE_PATTERN,
   PRIORITY_PATTERN,
+  PRIORITY_TAG_KEY,
   type ParsedTodoFile,
   type ParsedTodoLine,
   type TodoItem,
@@ -12,7 +13,6 @@ const priorityTokenPattern = /^\(([A-Z])\)$/;
 const projectTagPattern = /^\+([^\s+]+)$/;
 const contextTagPattern = /^@([^\s@]+)$/;
 const metadataTagPattern = /^([A-Za-z][\w-]*):(\S+)$/;
-const PRIORITY_TAG_KEY = 'pri';
 
 const makeError = (raw: string, lineNumber: number, error: string): UnparseableTodoItem => ({
   kind: 'unparseable',
