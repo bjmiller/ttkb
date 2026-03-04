@@ -26,9 +26,10 @@ jobs:
           persist-credentials: false
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@3d267786b128fe76c2f16a390aa2448b815359f3 # v2
+        uses: oven-sh/setup-bun@4c32875876eebbbb9bc34b8ee07ba2d7bb4b3462
         with:
           no-cache: true
+          bun-version: latest
 
       - name: Build single-file executables
         shell: bash
@@ -52,6 +53,7 @@ jobs:
             "bun-linux-x64-musl"
             "bun-linux-arm64-musl"
             "bun-windows-x64"
+            "bun-windows-arm64"
           )
 
           for target in "${targets[@]}"; do
