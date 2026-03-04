@@ -16,7 +16,7 @@ export const useTodoFile = (filePath: string) => {
     try {
       const parsed = await readTodoFile(filePath);
       const s = parsed.items.length === 1 ? '' : 's';
-      const allLines = [...parsed.items, ...parsed.errors].sort(byLineNumber);
+      const allLines = [...parsed.items, ...parsed.errors].toSorted(byLineNumber);
       setLines(allLines);
       setStatus(`${parsed.items.length} task${s}`);
       setError(undefined);
@@ -94,11 +94,11 @@ export const useTodoFile = (filePath: string) => {
       const nextMutatedLines = await mutator(items, errors);
 
       const nextLines = nextMutatedLines
-        .map((line, index) => ({
-          ...line,
-          lineNumber: index + 1
-        }))
-        .sort(byLineNumber);
+        .map((line, index) => {
+          line.lineNumber = index + 1;
+          return line;
+        })
+        .toSorted(byLineNumber);
 
       await persist(nextLines);
     },

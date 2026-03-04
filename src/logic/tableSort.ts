@@ -65,7 +65,7 @@ export const sortTableRows = (rows: TableRow[], sort: TableSort | undefined): Ta
     return rows;
   }
 
-  return [...rows].sort((left, right) => {
+  return [...rows].toSorted((left, right) => {
     const leftValue = getSortValue(left, sort.column);
     const rightValue = getSortValue(right, sort.column);
     const byValue = leftValue.localeCompare(rightValue);

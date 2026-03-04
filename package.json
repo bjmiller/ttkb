@@ -5,7 +5,7 @@
   "type": "module",
   "module": "index.ts",
   "scripts": {
-    "lint": "oxlint --type-aware --fix",
+    "lint": "oxlint --report-unused-disable-directives-severity warn --fix",
     "format": "oxfmt --write",
     "build": "bun run ./scripts/build-executable.ts --outfile dist/ttkb"
   },

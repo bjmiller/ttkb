@@ -101,6 +101,7 @@ export const usePreserveSelection = ({
 
     setPendingSelection(undefined);
   }, [
+    columns,
     columns.backlog,
     columns.doing,
     columns.done,

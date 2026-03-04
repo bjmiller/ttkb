@@ -1,12 +1,14 @@
 {
-  "extends": ["oxlint/recommended"],
-  // "jsPlugins": [
-  //   "@stylistic/eslint-plugin"
-  // ],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "react-perf"],
+  "categories": {
+    "correctness": "error",
+    "perf": "warn"
+  },
   "rules": {
+    "array-callback-return": "error",
     "curly": "error",
     "default-case": "error",
-    // "dot-notation": "error",
+    "typescript/dot-notation": "error",
     "eqeqeq": [
       "error",
       "always",
@@ -16,28 +18,16 @@
     ],
     "global-require": "error",
     "guard-for-in": "warn",
-    // "@stylistic/max-len": [
-    //   "error",
-    //   {
-    //     "code": 120,
-    //     "ignoreTrailingComments": true,
-    //     "ignoreUrls": true,
-    //     "ignoreTemplateLiterals": true
-    //   }
-    // ],
-    // "new-parens": "error",
     "no-await-in-loop": "error",
-    // "no-buffer-constructor": "error",
-    // "no-confusing-arrow": "error",
     "no-console": "warn",
+    "no-case-declarations": "error",
     "no-duplicate-imports": "error",
     "no-eval": "error",
     "no-extra-bind": "warn",
-    // "no-extra-parens": "warn",
-    // "no-floating-decimal": "warn",
+    "no-global-assign": "warn",
     "no-implicit-coercion": "error",
-    // "no-implicit-globals": "error",
     "no-implied-eval": "error",
+    "no-inner-declarations": "error",
     "no-lonely-if": "error",
     "no-loop-func": "error",
     "no-magic-numbers": [
@@ -50,7 +40,7 @@
     ],
     "no-misleading-character-class": "error",
     "no-new": "error",
-    // "no-new-object": "error",
+    "no-object-constructor": "error",
     "no-new-require": "error",
     "no-new-wrappers": "error",
     "no-param-reassign": [
@@ -64,7 +54,7 @@
     "no-shadow-restricted-names": "error",
     "no-template-curly-in-string": "warn",
     "no-throw-literal": "error",
-    // "no-unmodified-loop-condition": "error",
+    "no-unmodified-loop-condition": "error",
     "no-useless-computed-key": "warn",
     "no-var": "warn",
     "prefer-const": "error",
@@ -72,18 +62,54 @@
     "radix": "error",
     "require-await": "error",
     "yoda": "error",
-    "no-unused-vars": "off",
-    "typescript/no-unused-vars": "warn",
-    "typescript/require-await": "off",
+    "no-unused-vars": "warn",
     "typescript/array-type": "off",
+    "typescript/ban-ts-comment": [
+      "error",
+      {
+        "ts-expect-error": "allow-with-description",
+        "ts-ignore": "allow-with-description",
+        "ts-nocheck": "allow-with-description",
+        "ts-check": "allow-with-description",
+        "minimumDescriptionLength": 8
+      }
+    ],
     "typescript/consistent-type-definitions": "off",
     "typescript/consistent-type-imports": "warn",
-    "typescript/no-require-imports": "off"
+    "typescript/no-explicit-any": "error",
+    "typescript/no-require-imports": "off",
+    "typescript/no-non-null-assertion": "error",
+    "typescript/no-unnecessary-boolean-literal-compare": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unsafe-type-assertion": "error",
+    "typescript/prefer-includes": "error",
+    "typescript/prefer-optional-chain": "error",
+    "typescript/prefer-nullish-coalescing": "error",
+    "typescript/require-await": "error",
+    "typescript/strict-void-return": "error",
+    "typescript/switch-exhaustiveness-check": "error",
+    "unicorn/no-new-buffer": "error",
+    "unicorn/no-abusive-eslint-disable": "error",
+    "unicorn/explicit-length-check": "error",
+    "unicorn/error-message": "error",
+    "unicorn/no-array-sort": "error",
+    "unicorn/no-object-as-default-parameter": "error",
+    "unicorn/prefer-default-parameters": "error",
+    "unicorn/prefer-logical-operator-over-ternary": "error",
+    "unicorn/prefer-node-protocol": "error",
+    "unicorn/prefer-structured-clone": "error",
+    "unicorn/throw-new-error": "error",
+    "react/rules-of-hooks": "error"
   },
   "env": {
     "es2015": true,
     "browser": true,
     "node": true
   },
-  "ignorePatterns": ["dist/*", "node_modules/*"]
+  "ignorePatterns": ["dist/*", "node_modules/*"],
+  "options": {
+    "typeAware": true,
+    "typeCheck": true
+  }
 }

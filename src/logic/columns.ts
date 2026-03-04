@@ -46,7 +46,7 @@ export const buildColumns = (items: TodoItem[], errors: UnparseableTodoItem[], f
     done: []
   };
 
-  const sortedTodos = [...items].sort(compareTodoItems);
+  const sortedTodos = [...items].toSorted(compareTodoItems);
   for (const item of sortedTodos) {
     if (!matchesFilter(item.raw)) {
       continue;

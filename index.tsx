@@ -17,6 +17,15 @@ const leaveAlternateScreen = () => {
 const DEFAULT_CURSOR_STYLE: Exclude<CursorShape, 'native'> = 'block';
 const DEFAULT_CURSOR_BLINK = false;
 
+const resolveCursorStyle = (
+  explicitCursorShape: Exclude<CursorShape, 'native'> | undefined,
+  explicitCursorBlink: boolean | undefined,
+  detectedCursor: Awaited<ReturnType<typeof detectTerminalCursor>> | undefined
+): CursorStyle => ({
+  shape: explicitCursorShape ?? detectedCursor?.style ?? DEFAULT_CURSOR_STYLE,
+  blink: explicitCursorBlink ?? detectedCursor?.blink ?? DEFAULT_CURSOR_BLINK
+});
+
 const main = async () => {
   const config = await loadConfig();
 
@@ -24,10 +33,7 @@ const main = async () => {
   const explicitCursorBlink = config.cursorBlink;
 
   const detectedCursor = explicitCursorShape ? undefined : await detectTerminalCursor();
-  const resolvedCursorStyle: CursorStyle = {
-    shape: explicitCursorShape ?? detectedCursor?.style ?? DEFAULT_CURSOR_STYLE,
-    blink: explicitCursorBlink ?? detectedCursor?.blink ?? DEFAULT_CURSOR_BLINK
-  };
+  const resolvedCursorStyle = resolveCursorStyle(explicitCursorShape, explicitCursorBlink, detectedCursor);
 
   enterAlternateScreen();
   const app = render(<App todoFilePath={config.todoFilePath} cursorStyle={resolvedCursorStyle} />);

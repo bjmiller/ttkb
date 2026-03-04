@@ -68,7 +68,7 @@ export const detectTerminalCursor = (): Promise<CursorProfile | undefined> => {
     const onData = (chunk: Buffer | string) => {
       buffer += chunk.toString();
       const match = buffer.match(RESPONSE_PATTERN);
-      if (!match || !match[1]) {
+      if (!match?.[1]) {
         return;
       }
 

@@ -81,7 +81,7 @@ export const useTaskActions = ({
 
     if (action.type === 'change-priority') {
       const selected = activeSelected;
-      if (!selected || selected.kind !== 'todo') {
+      if (selected?.kind !== 'todo') {
         commandBar.setStatusText('No selectable task');
         return;
       }
@@ -92,14 +92,14 @@ export const useTaskActions = ({
         );
 
         commandBar.setStatusText('Priority updated');
-        return [...nextTodoItems, ...parseErrors].sort(byLineNumber);
+        return [...nextTodoItems, ...parseErrors].toSorted(byLineNumber);
       });
       return;
     }
 
     if (action.type === 'change-description') {
       const selected = activeSelected;
-      if (!selected || selected.kind !== 'todo') {
+      if (selected?.kind !== 'todo') {
         commandBar.setStatusText('No selectable task');
         return;
       }
@@ -110,14 +110,14 @@ export const useTaskActions = ({
         );
 
         commandBar.setStatusText('Description updated');
-        return [...nextTodoItems, ...parseErrors].sort(byLineNumber);
+        return [...nextTodoItems, ...parseErrors].toSorted(byLineNumber);
       });
       return;
     }
 
     if (action.type === 'change-dates') {
       const selected = activeSelected;
-      if (!selected || selected.kind !== 'todo') {
+      if (selected?.kind !== 'todo') {
         commandBar.setStatusText('No selectable task');
         return;
       }
@@ -128,7 +128,7 @@ export const useTaskActions = ({
         );
 
         commandBar.setStatusText('Date updated');
-        return [...nextTodoItems, ...parseErrors].sort(byLineNumber);
+        return [...nextTodoItems, ...parseErrors].toSorted(byLineNumber);
       });
       return;
     }
@@ -143,7 +143,7 @@ export const useTaskActions = ({
         });
 
         commandBar.setStatusText('Task added');
-        return [...todoItems, ...parseErrors, created].sort(byLineNumber);
+        return [...todoItems, ...parseErrors, created].toSorted(byLineNumber);
       });
       return;
     }
@@ -155,7 +155,7 @@ export const useTaskActions = ({
 
   const toggleSelected = () => {
     const selected = getActiveSelected();
-    if (!selected || selected.kind !== 'todo') {
+    if (selected?.kind !== 'todo') {
       commandBar.setStatusText('No selectable task');
       return;
     }
@@ -168,13 +168,13 @@ export const useTaskActions = ({
       );
 
       commandBar.setStatusText('Toggled completion');
-      return [...nextTodoItems, ...parseErrors].sort(byLineNumber);
+      return [...nextTodoItems, ...parseErrors].toSorted(byLineNumber);
     });
   };
 
   const toggleSelectedDoing = () => {
     const selected = getActiveSelected();
-    if (!selected || selected.kind !== 'todo') {
+    if (selected?.kind !== 'todo') {
       commandBar.setStatusText('No selectable task');
       return;
     }
@@ -192,7 +192,7 @@ export const useTaskActions = ({
       );
 
       commandBar.setStatusText('Toggled doing status');
-      return [...nextTodoItems, ...parseErrors].sort(byLineNumber);
+      return [...nextTodoItems, ...parseErrors].toSorted(byLineNumber);
     });
   };
 
@@ -201,12 +201,12 @@ export const useTaskActions = ({
       const { active, completed } = partitionCompleted(todoItems);
       if (completed.length === 0) {
         commandBar.setStatusText('No completed tasks to clean');
-        return [...active, ...parseErrors].sort(byLineNumber);
+        return [...active, ...parseErrors].toSorted(byLineNumber);
       }
 
       await appendLinesToFile(doneFilePath, completed);
       commandBar.setStatusText(`Moved ${completed.length} completed task(s)`);
-      return [...active, ...parseErrors].sort(byLineNumber);
+      return [...active, ...parseErrors].toSorted(byLineNumber);
     });
   };
 
@@ -237,13 +237,13 @@ export const useTaskActions = ({
       const wasRemoved = nextTodoItems.length !== todoItems.length || nextParseErrors.length !== parseErrors.length;
       commandBar.setStatusText(wasRemoved ? 'Task deleted' : 'Task no longer exists');
 
-      return [...nextTodoItems, ...nextParseErrors].sort(byLineNumber);
+      return [...nextTodoItems, ...nextParseErrors].toSorted(byLineNumber);
     });
   };
 
   const beginEditSelectedDescription = () => {
     const selected = getActiveSelected();
-    if (!selected || selected.kind !== 'todo') {
+    if (selected?.kind !== 'todo') {
       commandBar.setStatusText('No selectable task');
       return;
     }
@@ -253,7 +253,7 @@ export const useTaskActions = ({
 
   const beginEditSelectedDates = () => {
     const selected = getActiveSelected();
-    if (!selected || selected.kind !== 'todo') {
+    if (selected?.kind !== 'todo') {
       commandBar.setStatusText('No selectable task');
       return;
     }

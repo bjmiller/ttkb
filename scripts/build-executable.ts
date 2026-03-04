@@ -1,5 +1,7 @@
 import { argv, cwd, env, execPath, exit } from 'node:process';
 
+import { type } from 'arktype';
+
 type BuildOptions = {
   target?: string;
   outfile: string;
@@ -9,10 +11,17 @@ type BuildOptions = {
 
 const ARGV_OFFSET = 2;
 const PACKAGE_JSON_PATH = `${cwd()}/package.json`;
+const PackageJsonSchema = type({
+  'version?': 'string'
+});
 
 const readPackageVersion = async (): Promise<string> => {
   const packageJsonText = await Bun.file(PACKAGE_JSON_PATH).text();
-  const packageJson = JSON.parse(packageJsonText) as { version?: string };
+  const packageJson = PackageJsonSchema(JSON.parse(packageJsonText));
+
+  if (packageJson instanceof type.errors) {
+    throw new Error('package.json has an invalid format');
+  }
 
   if (!packageJson.version) {
     throw new Error('package.json is missing a version field');
