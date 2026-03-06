@@ -7,7 +7,8 @@
   "scripts": {
     "lint": "oxlint --report-unused-disable-directives-severity warn --fix",
     "format": "oxfmt --write",
-    "build": "bun run ./scripts/build-executable.ts --outfile dist/ttkb"
+    "build": "bun run ./scripts/build-executable.ts --outfile dist/ttkb",
+    "create-release": "bun run ./scripts/create-release.ts"
   },
   "dependencies": {
     "arktype": "^2.1.29",

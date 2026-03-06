@@ -1,5 +1,12 @@
 {
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "react-perf"],
+  "plugins": [
+    "eslint",
+    "typescript",
+    "unicorn",
+    "oxc",
+    "react",
+    "react-perf"
+  ],
   "categories": {
     "correctness": "error",
     "perf": "warn"
@@ -33,7 +40,11 @@
     "no-magic-numbers": [
       "error",
       {
-        "ignore": [-1, 0, 1],
+        "ignore": [
+          -1,
+          0,
+          1
+        ],
         "ignoreArrayIndexes": true,
         "detectObjects": true
       }
@@ -107,7 +118,10 @@
     "browser": true,
     "node": true
   },
-  "ignorePatterns": ["dist/*", "node_modules/*"],
+  "ignorePatterns": [
+    "dist/*",
+    "node_modules/*"
+  ],
   "options": {
     "typeAware": true,
     "typeCheck": true
