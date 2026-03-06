@@ -1,12 +1,5 @@
 {
-  "plugins": [
-    "eslint",
-    "typescript",
-    "unicorn",
-    "oxc",
-    "react",
-    "react-perf"
-  ],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "react-perf"],
   "categories": {
     "correctness": "error",
     "perf": "warn"
@@ -40,11 +33,7 @@
     "no-magic-numbers": [
       "error",
       {
-        "ignore": [
-          -1,
-          0,
-          1
-        ],
+        "ignore": [-1, 0, 1],
         "ignoreArrayIndexes": true,
         "detectObjects": true
       }
@@ -98,6 +87,7 @@
     "typescript/prefer-optional-chain": "error",
     "typescript/prefer-nullish-coalescing": "error",
     "typescript/require-await": "error",
+    "typescript/strict-boolean-expressions": "error",
     "typescript/strict-void-return": "error",
     "typescript/switch-exhaustiveness-check": "error",
     "unicorn/no-new-buffer": "error",
@@ -118,10 +108,7 @@
     "browser": true,
     "node": true
   },
-  "ignorePatterns": [
-    "dist/*",
-    "node_modules/*"
-  ],
+  "ignorePatterns": ["dist/*", "node_modules/*"],
   "options": {
     "typeAware": true,
     "typeCheck": true

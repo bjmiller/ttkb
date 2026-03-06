@@ -68,11 +68,12 @@ export const detectTerminalCursor = (): Promise<CursorProfile | undefined> => {
     const onData = (chunk: Buffer | string) => {
       buffer += chunk.toString();
       const match = buffer.match(RESPONSE_PATTERN);
-      if (!match?.[1]) {
+      const codeText = match?.[1];
+      if (codeText == null) {
         return;
       }
 
-      const code = Number.parseInt(match[1], 10);
+      const code = Number.parseInt(codeText, 10);
       finish(decodeCursorCode(code));
     };
 

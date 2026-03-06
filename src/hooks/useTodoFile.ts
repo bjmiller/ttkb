@@ -41,7 +41,7 @@ export const useTodoFile = (filePath: string) => {
       watcher = watch(directory, (_eventType, changedName) => {
         const normalizedChangedName = typeof changedName === 'string' ? changedName : undefined;
 
-        if (normalizedChangedName && normalizedChangedName !== targetName) {
+        if (normalizedChangedName != null && normalizedChangedName !== targetName) {
           return;
         }
 

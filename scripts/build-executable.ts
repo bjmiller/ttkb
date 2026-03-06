@@ -23,7 +23,7 @@ const readPackageVersion = async (): Promise<string> => {
     throw new Error('package.json has an invalid format');
   }
 
-  if (!packageJson.version) {
+  if (packageJson.version == null || packageJson.version.length === 0) {
     throw new Error('package.json is missing a version field');
   }
 
@@ -48,12 +48,12 @@ const parseArgs = async (): Promise<BuildOptions> => {
   const version = getArgValue('--version') ?? env.TTKB_BUILD_VERSION ?? (await readPackageVersion());
   const commit = getArgValue('--commit') ?? env.TTKB_BUILD_COMMIT ?? resolveGitCommit();
 
-  if (!outfile) {
+  if (outfile == null || outfile.length === 0) {
     throw new Error('Missing required --outfile argument');
   }
 
   return {
-    ...(target ? { target } : {}),
+    ...(target != null ? { target } : {}),
     outfile,
     version,
     commit
@@ -90,7 +90,7 @@ const build = (options: BuildOptions): number => {
     `__TTKB_BUILD_COMMIT__=${JSON.stringify(options.commit)}`
   ];
 
-  if (options.target) {
+  if (options.target != null) {
     compileArgs.push('--target', options.target);
   }
 

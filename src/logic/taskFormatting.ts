@@ -7,7 +7,10 @@ export const formatDoneLine = (item: TodoItem): string => {
 };
 
 export const formatActiveLine = (item: TodoItem): string => {
-  return `${item.priority ? `(${item.priority}) ` : ''}${item.creationDate ? `${item.creationDate} ` : ''}${item.description}`;
+  const priorityPrefix = item.priority == null ? '' : `(${item.priority}) `;
+  const creationDatePrefix = item.creationDate == null ? '' : `${item.creationDate} `;
+
+  return `${priorityPrefix}${creationDatePrefix}${item.description}`;
 };
 
 export const formatPrimaryLine = (item: TodoItem): string => {
@@ -15,7 +18,7 @@ export const formatPrimaryLine = (item: TodoItem): string => {
 };
 
 export const formatDoneCallout = (item: TodoItem): string | undefined => {
-  return !item.completed && item.completionDate ? `done: ${item.completionDate}` : undefined;
+  return !item.completed && item.completionDate != null ? `done: ${item.completionDate}` : undefined;
 };
 
 export const formatProjects = (projects: string[]): string => {

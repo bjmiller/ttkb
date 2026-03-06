@@ -57,7 +57,7 @@ export const getSortValue = (row: TableRow, column: TableSortColumn): string => 
   const descriptionValue = formatPrimaryLine(item);
   const doneCallout = formatDoneCallout(item);
 
-  return doneCallout ? `${descriptionValue} ${doneCallout}` : descriptionValue;
+  return doneCallout == null ? descriptionValue : `${descriptionValue} ${doneCallout}`;
 };
 
 export const sortTableRows = (rows: TableRow[], sort: TableSort | undefined): TableRow[] => {

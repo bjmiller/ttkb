@@ -14,8 +14,10 @@ const getStatusTag = (item: TodoItem): string | undefined => {
 };
 
 const compareTodoItems = (left: TodoItem, right: TodoItem): number => {
-  const leftPriorityRank = left.priority ? left.priority.charCodeAt(0) - PRIORITY_BASE_CHAR_CODE : NO_PRIORITY_RANK;
-  const rightPriorityRank = right.priority ? right.priority.charCodeAt(0) - PRIORITY_BASE_CHAR_CODE : NO_PRIORITY_RANK;
+  const leftPriorityRank =
+    left.priority == null ? NO_PRIORITY_RANK : left.priority.charCodeAt(0) - PRIORITY_BASE_CHAR_CODE;
+  const rightPriorityRank =
+    right.priority == null ? NO_PRIORITY_RANK : right.priority.charCodeAt(0) - PRIORITY_BASE_CHAR_CODE;
   if (leftPriorityRank !== rightPriorityRank) {
     return leftPriorityRank - rightPriorityRank;
   }
@@ -33,7 +35,7 @@ export const buildColumns = (items: TodoItem[], errors: UnparseableTodoItem[], f
   const normalizedFilter = filter?.trim().toLowerCase();
 
   const matchesFilter = (raw: string): boolean => {
-    if (!normalizedFilter) {
+    if (normalizedFilter == null || normalizedFilter.length === 0) {
       return true;
     }
 

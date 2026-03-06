@@ -32,7 +32,7 @@ const parseVersionArgument = (): string => {
   if (versionFlagIndex !== -1) {
     const version = args[versionFlagIndex + 1];
 
-    if (!version) {
+    if (version == null || version.length === 0) {
       throw new Error('Missing value for --version');
     }
 
@@ -41,7 +41,7 @@ const parseVersionArgument = (): string => {
 
   const [version] = args;
 
-  if (!version) {
+  if (version == null || version.length === 0) {
     throw new Error('Usage: bun run create-release -- <version>');
   }
 
@@ -57,11 +57,11 @@ const parseSemver = (input: string): ParsedSemver => {
 
   const [, majorText, minorText, patchText, prereleaseText] = match;
 
-  if (!majorText || !minorText || !patchText) {
+  if (majorText == null || minorText == null || patchText == null) {
     throw new Error(`Invalid semver version: ${input}`);
   }
 
-  const prerelease = prereleaseText ? prereleaseText.split('.') : [];
+  const prerelease = prereleaseText == null ? [] : prereleaseText.split('.');
 
   for (const identifier of prerelease) {
     if (/^\d+$/.test(identifier) && identifier.length > 1 && identifier.startsWith('0')) {
@@ -133,11 +133,11 @@ const compareSemver = (left: ParsedSemver, right: ParsedSemver): number => {
     const leftIdentifier = left.prerelease[index];
     const rightIdentifier = right.prerelease[index];
 
-    if (!leftIdentifier) {
+    if (leftIdentifier == null) {
       return -1;
     }
 
-    if (!rightIdentifier) {
+    if (rightIdentifier == null) {
       return 1;
     }
 

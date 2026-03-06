@@ -33,7 +33,7 @@ export const getCardHeight = (task: DisplayTask, contentWidth: number): number =
   let contentRows = getWrappedRowCount(primaryLine, contentWidth);
 
   const doneCallout = formatDoneCallout(task.item);
-  if (doneCallout) {
+  if (doneCallout != null) {
     contentRows += getWrappedRowCount(doneCallout, contentWidth);
   }
 

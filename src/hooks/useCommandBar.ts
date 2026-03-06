@@ -57,7 +57,7 @@ const datePromptWithError = (activeDateField: DateField, completed: boolean, err
 
 const applyDateInputValue = (current: DateInputMode, nextValue: string): DateInputMode => {
   if (current.activeDateField === 'completion') {
-    if (!nextValue) {
+    if (nextValue.length === 0) {
       const { completionDate: _completionDate, ...rest } = current;
       return { ...rest, value: nextValue };
     }
@@ -65,7 +65,7 @@ const applyDateInputValue = (current: DateInputMode, nextValue: string): DateInp
     return { ...current, value: nextValue, completionDate: nextValue };
   }
 
-  if (!nextValue) {
+  if (nextValue.length === 0) {
     const { creationDate: _creationDate, ...rest } = current;
     return { ...rest, value: nextValue };
   }
@@ -131,8 +131,8 @@ export const useCommandBar = () => {
       value,
       completed: params.completed,
       activeDateField,
-      ...(params.creationDate ? { creationDate: params.creationDate } : {}),
-      ...(params.completionDate ? { completionDate: params.completionDate } : {})
+      ...(params.creationDate != null ? { creationDate: params.creationDate } : {}),
+      ...(params.completionDate != null ? { completionDate: params.completionDate } : {})
     });
   };
 
@@ -150,7 +150,7 @@ export const useCommandBar = () => {
   };
 
   const cancel = () => {
-    if ((state.mode === 'input' && state.kind === 'filter') || (state.mode === 'idle' && filter)) {
+    if ((state.mode === 'input' && state.kind === 'filter') || (state.mode === 'idle' && filter != null)) {
       clearFilter();
       return;
     }
@@ -159,7 +159,7 @@ export const useCommandBar = () => {
   };
 
   const toggleFilter = () => {
-    if (filter) {
+    if (filter != null) {
       clearFilter();
       return;
     }
@@ -234,9 +234,10 @@ export const useCommandBar = () => {
     }
 
     if (state.kind === 'filter') {
-      const nextFilter = state.value.trim() || undefined;
+      const trimmedFilter = state.value.trim();
+      const nextFilter = trimmedFilter.length === 0 ? undefined : trimmedFilter;
       setFilter(nextFilter);
-      setStatusText(nextFilter ? `Filter: ${nextFilter}` : 'Filter cleared');
+      setStatusText(nextFilter == null ? 'Filter cleared' : `Filter: ${nextFilter}`);
       setState({ mode: 'idle' });
       return { type: 'set-filter', value: nextFilter };
     }
@@ -245,7 +246,7 @@ export const useCommandBar = () => {
       const letter = state.value.trim().toUpperCase();
       const priority = letter.length === 1 ? letter : undefined;
       setState({ mode: 'idle' });
-      return priority ? { type: 'change-priority', priority } : { type: 'change-priority' };
+      return priority == null ? { type: 'change-priority' } : { type: 'change-priority', priority };
     }
 
     if (state.kind === 'add-priority') {
@@ -257,27 +258,27 @@ export const useCommandBar = () => {
         kind: 'add-description',
         prompt: 'Task description: ',
         value: '',
-        ...(addPriority ? { addPriority } : {})
+        ...(addPriority != null ? { addPriority } : {})
       });
       return { type: 'none' };
     }
 
     if (state.kind === 'add-description') {
       const description = state.value.trim();
-      if (!description) {
+      if (description.length === 0) {
         setStatusText('Description is required');
         return { type: 'none' };
       }
 
       setState({ mode: 'idle' });
-      return state.addPriority
+      return state.addPriority != null
         ? { type: 'add', priority: state.addPriority, description }
         : { type: 'add', description };
     }
 
     if (state.kind === 'edit-description') {
       const description = state.value.trim();
-      if (!description) {
+      if (description.length === 0) {
         setStatusText('Description is required');
         return { type: 'none' };
       }
@@ -289,10 +290,12 @@ export const useCommandBar = () => {
     if (state.kind === 'edit-date') {
       const value = state.value.trim();
 
-      const creationDate = state.activeDateField === 'creation' ? value || undefined : state.creationDate;
-      const completionDate = state.activeDateField === 'completion' ? value || undefined : state.completionDate;
+      const creationDate =
+        state.activeDateField === 'creation' ? (value.length === 0 ? undefined : value) : state.creationDate;
+      const completionDate =
+        state.activeDateField === 'completion' ? (value.length === 0 ? undefined : value) : state.completionDate;
 
-      if (creationDate && !DATE_PATTERN.test(creationDate)) {
+      if (creationDate != null && !DATE_PATTERN.test(creationDate)) {
         setState({
           ...state,
           prompt: datePromptWithError(state.activeDateField, state.completed, 'Invalid created date.')
@@ -302,7 +305,7 @@ export const useCommandBar = () => {
       }
 
       if (state.completed) {
-        if (!completionDate) {
+        if (completionDate == null) {
           setState({
             ...state,
             prompt: datePromptWithError(state.activeDateField, state.completed, 'Completed date is required.')

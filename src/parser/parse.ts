@@ -44,21 +44,22 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
   }
 
   const priorityToken = tokens[index];
-  if (priorityToken && priorityTokenPattern.test(priorityToken)) {
-    const [, parsedPriority] = priorityToken.match(priorityTokenPattern) ?? [];
-    if (!parsedPriority || !PRIORITY_PATTERN.test(parsedPriority)) {
+  const priorityMatch = priorityToken?.match(priorityTokenPattern);
+  if (priorityMatch != null) {
+    const [, parsedPriority] = priorityMatch;
+    if (parsedPriority == null || !PRIORITY_PATTERN.test(parsedPriority)) {
       return makeError(raw, lineNumber, 'Invalid priority token');
     }
 
     parenthesizedPriority = parsedPriority;
     index += 1;
-  } else if (priorityToken?.startsWith('(')) {
+  } else if (priorityToken?.startsWith('(') === true) {
     return makeError(raw, lineNumber, 'Malformed priority token');
   }
 
   if (completed) {
     const maybeCompletionDate = tokens[index];
-    if (!maybeCompletionDate || !isDate(maybeCompletionDate)) {
+    if (maybeCompletionDate == null || !isDate(maybeCompletionDate)) {
       return makeError(raw, lineNumber, 'Completed task is missing a valid completion date');
     }
 
@@ -67,7 +68,7 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
   }
 
   const maybeCreationDate = tokens[index];
-  if (maybeCreationDate && isDate(maybeCreationDate)) {
+  if (maybeCreationDate != null && isDate(maybeCreationDate)) {
     creationDate = maybeCreationDate;
     index += 1;
   }
@@ -86,7 +87,7 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
     const projectMatch = token.match(projectTagPattern);
     if (projectMatch) {
       const [, project] = projectMatch;
-      if (project) {
+      if (project != null) {
         projects.push(project);
       }
       continue;
@@ -95,7 +96,7 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
     const contextMatch = token.match(contextTagPattern);
     if (contextMatch) {
       const [, context] = contextMatch;
-      if (context) {
+      if (context != null) {
         contexts.push(context);
       }
       continue;
@@ -104,8 +105,8 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
     const metadataMatch = token.match(metadataTagPattern);
     if (metadataMatch) {
       const [, key, value] = metadataMatch;
-      if (key && value) {
-        if (!priTagPriority && key === PRIORITY_TAG_KEY && PRIORITY_PATTERN.test(value)) {
+      if (key != null && value != null) {
+        if (priTagPriority == null && key === PRIORITY_TAG_KEY && PRIORITY_PATTERN.test(value)) {
           priTagPriority = value;
         }
 
@@ -135,15 +136,15 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
 
   const priority = completed ? priTagPriority : parenthesizedPriority;
 
-  if (priority) {
+  if (priority != null) {
     item.priority = priority;
   }
 
-  if (completionDate) {
+  if (completionDate != null) {
     item.completionDate = completionDate;
   }
 
-  if (creationDate) {
+  if (creationDate != null) {
     item.creationDate = creationDate;
   }
 

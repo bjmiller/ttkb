@@ -139,7 +139,7 @@ export const useTaskActions = ({
         const created = addTask({
           lineNumber: maxLine + 1,
           description: action.description,
-          ...(action.priority ? { priority: action.priority } : {})
+          ...(action.priority != null ? { priority: action.priority } : {})
         });
 
         commandBar.setStatusText('Task added');
@@ -260,8 +260,8 @@ export const useTaskActions = ({
 
     commandBar.openEditDates({
       completed: selected.item.completed,
-      ...(selected.item.creationDate ? { creationDate: selected.item.creationDate } : {}),
-      ...(selected.item.completionDate ? { completionDate: selected.item.completionDate } : {})
+      ...(selected.item.creationDate != null ? { creationDate: selected.item.creationDate } : {}),
+      ...(selected.item.completionDate != null ? { completionDate: selected.item.completionDate } : {})
     });
   };
 

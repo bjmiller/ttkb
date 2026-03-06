@@ -90,7 +90,7 @@ const getRowCellValues = (row: TableRow): RowCellValues => {
     project: item.projects.length > 0 ? formatProjects(item.projects) : '-',
     context: item.contexts.length > 0 ? formatContexts(item.contexts) : '-',
     meta: item.metadata.length > 0 ? formatMeta(item.metadata) : '-',
-    description: doneCallout ? `${descriptionValue} ${doneCallout}` : descriptionValue
+    description: doneCallout == null ? descriptionValue : `${descriptionValue} ${doneCallout}`
   };
 };
 
@@ -147,7 +147,7 @@ const renderHeaderCell = (params: {
   const base = formatCell(params.label, params.width);
   const arrow = getSortArrow(params.sort, params.column);
 
-  if (!arrow || params.label.length >= params.width) {
+  if (arrow == null || params.label.length >= params.width) {
     return base;
   }
 

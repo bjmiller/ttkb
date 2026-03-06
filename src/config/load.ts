@@ -15,12 +15,14 @@ const HOME_PREFIX_LENGTH = 2;
 const TODO_FILE_NAME = 'todo.txt';
 
 const getHomeDir = (): string => {
+  const homeDrive = process.env.HOMEDRIVE;
+  const homePath = process.env.HOMEPATH;
   const homeDir =
     process.env.HOME ??
     process.env.USERPROFILE ??
-    (process.env.HOMEDRIVE && process.env.HOMEPATH ? `${process.env.HOMEDRIVE}${process.env.HOMEPATH}` : undefined);
+    (homeDrive != null && homePath != null ? `${homeDrive}${homePath}` : undefined);
 
-  if (!homeDir) {
+  if (homeDir == null || homeDir.length === 0) {
     throw new Error('Unable to resolve home directory from environment');
   }
 
@@ -49,8 +51,8 @@ const getConfigDirectoryCandidates = (): string[] => {
     const windowsFallback = path.join(homeDir, 'AppData', 'Roaming', 'ttkb');
 
     const windowsCandidates = [
-      appData ? path.join(appData, 'ttkb') : undefined,
-      localAppData ? path.join(localAppData, 'ttkb') : undefined,
+      appData != null && appData.length > 0 ? path.join(appData, 'ttkb') : undefined,
+      localAppData != null && localAppData.length > 0 ? path.join(localAppData, 'ttkb') : undefined,
       windowsFallback,
       fallback
     ].filter((candidate): candidate is string => Boolean(candidate));
@@ -63,7 +65,7 @@ const getConfigDirectoryCandidates = (): string[] => {
   }
 
   const xdgConfigHome = process.env.XDG_CONFIG_HOME;
-  if (xdgConfigHome) {
+  if (xdgConfigHome != null && xdgConfigHome.length > 0) {
     return [path.join(xdgConfigHome, 'ttkb'), fallback];
   }
 
@@ -92,21 +94,11 @@ const parseConfigContent = (filePath: string, content: string): unknown => {
   }
 
   if (filePath.endsWith('.json5')) {
-    const parser = Bun.JSON5;
-    if (!parser) {
-      throw new Error('JSON5 parser is not available in this Bun runtime');
-    }
-
-    return parser.parse(content);
+    return Bun.JSON5.parse(content);
   }
 
   if (filePath.endsWith('.yaml') || filePath.endsWith('.yml')) {
-    const parser = Bun.YAML;
-    if (!parser) {
-      throw new Error('YAML parser is not available in this Bun runtime');
-    }
-
-    return parser.parse(content);
+    return Bun.YAML.parse(content);
   }
 
   if (filePath.endsWith('.toml')) {
@@ -147,7 +139,7 @@ const sanitizeConfig = (parsed: unknown): ResolvedAppConfig => {
 
 export const loadConfig = async (): Promise<AppConfig> => {
   const configPath = await findConfigFile();
-  if (!configPath) {
+  if (configPath == null) {
     return {
       ...DEFAULT_CONFIG,
       todoFilePath: expandHomePath(DEFAULT_CONFIG.todoFilePath)

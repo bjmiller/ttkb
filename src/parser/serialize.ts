@@ -11,15 +11,15 @@ const serializeTodoItem = (item: TodoItem): string => {
     segments.push('x');
   }
 
-  if (item.priority && !item.completed) {
+  if (item.priority != null && !item.completed) {
     segments.push(`(${item.priority})`);
   }
 
-  if (item.completed && item.completionDate) {
+  if (item.completed && item.completionDate != null) {
     segments.push(item.completionDate);
   }
 
-  if (item.creationDate) {
+  if (item.creationDate != null) {
     segments.push(item.creationDate);
   }
 

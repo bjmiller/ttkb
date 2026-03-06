@@ -77,7 +77,7 @@ export const useTableCommands = ({
   };
 
   const toggleFilter = () => {
-    if (viewMode === 'table' && commandBar.filter) {
+    if (viewMode === 'table' && commandBar.filter != null) {
       clearFilter();
       return;
     }

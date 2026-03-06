@@ -196,8 +196,8 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
         fileStatus={fileStatus}
         helpBuildInfo={HELP_BUILD_INFO}
         {...(cursorStyle ? { cursorStyle } : {})}
-        {...(fileError ? { fileError } : {})}
-        {...(commandBar.filter ? { filter: commandBar.filter } : {})}
+        {...(fileError != null ? { fileError } : {})}
+        {...(commandBar.filter != null ? { filter: commandBar.filter } : {})}
       />
     </Box>
   );

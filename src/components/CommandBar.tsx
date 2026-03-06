@@ -62,13 +62,13 @@ export const CommandBar = ({
       ) : state.mode === 'help' ? (
         <Box width="100%" justifyContent="space-between">
           <Text color="yellow">Press any key to dismiss help</Text>
-          {helpBuildInfo ? <Text dimColor>{helpBuildInfo}</Text> : null}
+          {helpBuildInfo != null ? <Text dimColor>{helpBuildInfo}</Text> : null}
         </Box>
       ) : (
         <Text>
           {status} | {fileStatus}
-          {filter ? ` | filter:${filter}` : ''}
-          {fileError ? ` | error:${fileError}` : ''}
+          {filter != null ? ` | filter:${filter}` : ''}
+          {fileError != null ? ` | error:${fileError}` : ''}
         </Text>
       )}
     </Box>

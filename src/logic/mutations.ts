@@ -19,7 +19,7 @@ const withoutPriorityTag = (metadata: TodoItem['metadata']): TodoItem['metadata'
 
 const withPriorityTag = (metadata: TodoItem['metadata'], priority: string | undefined): TodoItem['metadata'] => {
   const withoutPriority = withoutPriorityTag(metadata);
-  if (!priority) {
+  if (priority == null || priority.length === 0) {
     return withoutPriority;
   }
 
@@ -88,11 +88,11 @@ export const addTask = (params: { lineNumber: number; description: string; prior
     dirty: true
   };
 
-  return params.priority ? { ...base, priority: params.priority } : base;
+  return params.priority == null || params.priority.length === 0 ? base : { ...base, priority: params.priority };
 };
 
 export const changePriority = (item: TodoItem, priority: string | undefined): TodoItem => {
-  if (!priority) {
+  if (priority == null || priority.length === 0) {
     const { priority: _priority, ...withoutPriority } = item;
     return {
       ...withoutPriority,
@@ -129,14 +129,14 @@ export const changeDescription = (item: TodoItem, description: string): TodoItem
 export const changeDates = (item: TodoItem, changes: DateChanges): TodoItem => {
   let nextItem: TodoItem;
 
-  if (changes.creationDate) {
+  if (changes.creationDate != null && changes.creationDate.length > 0) {
     nextItem = { ...item, creationDate: changes.creationDate, dirty: true };
   } else {
     const { creationDate: _creationDate, ...withoutCreationDate } = item;
     nextItem = { ...withoutCreationDate, dirty: true };
   }
 
-  if (item.completed && changes.completionDate) {
+  if (item.completed && changes.completionDate != null && changes.completionDate.length > 0) {
     return {
       ...nextItem,
       completionDate: changes.completionDate,
