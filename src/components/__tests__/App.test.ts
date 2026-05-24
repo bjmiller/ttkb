@@ -19,18 +19,21 @@ describe('shouldClearFilterOnCancel', () => {
       mode: 'input',
       kind: 'filter',
       prompt: 'Filter tasks (Enter to apply, Esc to clear): ',
-      value: ''
+      value: '',
+      cursorPosition: 0
     };
 
     expect(shouldClearFilterOnCancel({ hasFilter: true, state })).toBe(true);
   });
 
   it('returns false for non-filter input modes', () => {
+    const value = 'task';
     const state: CommandBarState = {
       mode: 'input',
       kind: 'edit-description',
       prompt: 'Edit task description: ',
-      value: 'task'
+      value,
+      cursorPosition: value.length
     };
 
     expect(shouldClearFilterOnCancel({ hasFilter: true, state })).toBe(false);

@@ -29,7 +29,7 @@ type AppProps = {
 const COMMAND_BAR_ROWS = 3;
 
 export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
-  const { exit } = useApp();
+  const app = useApp();
   const [scrollOffset, setScrollOffset] = useState(0);
 
   const { items, errors, status: fileStatus, error: fileError, mutateTodos } = useTodoFile(todoFilePath);
@@ -101,7 +101,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     commandBar,
     onFilterApplied: () => setScrollOffset(0),
     preserveSelection,
-    exit
+    exit: () => app.exit()
   });
 
   const { clearFilter, toggleFilter, cancel, cycleTableSortColumn, toggleTableSortDirection, onToggleView } =
@@ -161,7 +161,17 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     onTab: commandBar.tab,
     onAppendInput: commandBar.appendInput,
     onBackspace: commandBar.backspace,
-    onConfirmQuit: exit,
+    onDeleteCharForward: commandBar.deleteCharForward,
+    onMoveCursorLeft: commandBar.moveCursorLeft,
+    onMoveCursorRight: commandBar.moveCursorRight,
+    onMoveCursorToStart: commandBar.moveCursorToStart,
+    onMoveCursorToEnd: commandBar.moveCursorToEnd,
+    onMoveCursorWordLeft: commandBar.moveCursorWordLeft,
+    onMoveCursorWordRight: commandBar.moveCursorWordRight,
+    onDeleteWordBackward: commandBar.deleteWordBackward,
+    onDeleteToLineStart: commandBar.deleteToLineStart,
+    onDeleteToLineEnd: commandBar.deleteToLineEnd,
+    onConfirmQuit: () => app.exit(),
     onConfirmDelete: deleteSelected,
     onDismissHelp: commandBar.dismissHelp,
     onClearFilter: clearFilter

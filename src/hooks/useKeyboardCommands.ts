@@ -27,6 +27,16 @@ type KeyActions = {
   onTab: () => void;
   onAppendInput: (text: string) => void;
   onBackspace: () => void;
+  onDeleteCharForward: () => void;
+  onMoveCursorLeft: () => void;
+  onMoveCursorRight: () => void;
+  onMoveCursorToStart: () => void;
+  onMoveCursorToEnd: () => void;
+  onMoveCursorWordLeft: () => void;
+  onMoveCursorWordRight: () => void;
+  onDeleteWordBackward: () => void;
+  onDeleteToLineStart: () => void;
+  onDeleteToLineEnd: () => void;
   onConfirmQuit: () => void;
   onConfirmDelete: () => void;
   onDismissHelp: () => void;
@@ -79,6 +89,76 @@ export const useKeyboardCommands = (actions: KeyActions) => {
 
       if (key.backspace || key.delete) {
         actions.onBackspace();
+        return;
+      }
+
+      if (key.leftArrow) {
+        actions.onMoveCursorLeft();
+        return;
+      }
+
+      if (key.rightArrow) {
+        actions.onMoveCursorRight();
+        return;
+      }
+
+      if (key.home) {
+        actions.onMoveCursorToStart();
+        return;
+      }
+
+      if (key.end) {
+        actions.onMoveCursorToEnd();
+        return;
+      }
+
+      if (key.ctrl && input === 'a') {
+        actions.onMoveCursorToStart();
+        return;
+      }
+
+      if (key.ctrl && input === 'e') {
+        actions.onMoveCursorToEnd();
+        return;
+      }
+
+      if (key.ctrl && input === 'b') {
+        actions.onMoveCursorLeft();
+        return;
+      }
+
+      if (key.ctrl && input === 'f') {
+        actions.onMoveCursorRight();
+        return;
+      }
+
+      if (key.meta && input === 'b') {
+        actions.onMoveCursorWordLeft();
+        return;
+      }
+
+      if (key.meta && input === 'f') {
+        actions.onMoveCursorWordRight();
+        return;
+      }
+
+      if (key.ctrl && input === 'w') {
+        actions.onDeleteWordBackward();
+        return;
+      }
+
+      if (key.ctrl && input === 'u') {
+        actions.onDeleteToLineStart();
+        return;
+      }
+
+      if (key.ctrl && input === 'k') {
+        actions.onDeleteToLineEnd();
+        return;
+      }
+
+      if (key.ctrl && input === 'd') {
+        actions.onDeleteCharForward();
         return;
       }
 

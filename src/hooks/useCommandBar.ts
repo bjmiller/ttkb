@@ -1,6 +1,21 @@
 import { useState } from 'react';
 
 import { DATE_PATTERN } from '../parser/types';
+import {
+  applyAppendInputToState,
+  applyBackspaceToState,
+  applyDeleteCharForwardToState,
+  moveCursorLeftByOne,
+  moveCursorRightByOne,
+  moveCursorToStartOfLine,
+  moveCursorToEndOfLine,
+  moveCursorWordLeftByOne,
+  moveCursorWordRightByOne,
+  deleteWordBackwardFromCursor,
+  deleteToLineStartFromCursor,
+  deleteToLineEndFromCursor,
+  isDateInput
+} from '../logic/inputEditing';
 
 type IdleMode = { mode: 'idle' };
 type HelpMode = { mode: 'help' };
@@ -10,6 +25,7 @@ type TextInputMode = {
   kind: 'add-priority' | 'add-description' | 'priority' | 'filter' | 'edit-description';
   prompt: string;
   value: string;
+  cursorPosition: number;
   addPriority?: string;
 };
 
@@ -20,6 +36,7 @@ type DateInputMode = {
   kind: 'edit-date';
   prompt: string;
   value: string;
+  cursorPosition: number;
   completed: boolean;
   activeDateField: DateField;
   creationDate?: string;
@@ -55,68 +72,54 @@ const datePromptWithError = (activeDateField: DateField, completed: boolean, err
   return `${errorMessage} ${datePrompt(activeDateField, completed)}`;
 };
 
-const applyDateInputValue = (current: DateInputMode, nextValue: string): DateInputMode => {
-  if (current.activeDateField === 'completion') {
-    if (nextValue.length === 0) {
-      const { completionDate: _completionDate, ...rest } = current;
-      return { ...rest, value: nextValue };
-    }
-
-    return { ...current, value: nextValue, completionDate: nextValue };
-  }
-
-  if (nextValue.length === 0) {
-    const { creationDate: _creationDate, ...rest } = current;
-    return { ...rest, value: nextValue };
-  }
-
-  return { ...current, value: nextValue, creationDate: nextValue };
-};
-
 export const useCommandBar = () => {
-  const [state, setState] = useState<CommandBarState>({ mode: 'idle' });
+  const [commandBarState, setCommandBarState] = useState<CommandBarState>({ mode: 'idle' });
   const [statusText, setStatusText] = useState<string>('Ready');
   const [filter, setFilter] = useState<string | undefined>();
 
   const clearFilter = () => {
     setFilter(undefined);
-    setState({ mode: 'idle' });
+    setCommandBarState({ mode: 'idle' });
     setStatusText('Filter cleared');
   };
 
   const openAdd = () => {
-    setState({
+    setCommandBarState({
       mode: 'input',
       kind: 'add-priority',
       prompt: 'Add task priority (A-Z, Enter to skip): ',
-      value: ''
+      value: '',
+      cursorPosition: 0
     });
   };
 
   const openChangePriority = () => {
-    setState({
+    setCommandBarState({
       mode: 'input',
       kind: 'priority',
       prompt: 'Set priority (A-Z, Enter to clear): ',
-      value: ''
+      value: '',
+      cursorPosition: 0
     });
   };
 
   const openFilter = () => {
-    setState({
+    setCommandBarState({
       mode: 'input',
       kind: 'filter',
       prompt: 'Filter tasks (Enter to apply, Esc to clear): ',
-      value: filter ?? ''
+      value: filter ?? '',
+      cursorPosition: (filter ?? '').length
     });
   };
 
   const openEditDescription = (description: string) => {
-    setState({
+    setCommandBarState({
       mode: 'input',
       kind: 'edit-description',
       prompt: 'Edit task description: ',
-      value: description
+      value: description,
+      cursorPosition: description.length
     });
   };
 
@@ -124,11 +127,12 @@ export const useCommandBar = () => {
     const activeDateField: DateField = params.completed ? 'completion' : 'creation';
     const value = activeDateField === 'completion' ? (params.completionDate ?? '') : (params.creationDate ?? '');
 
-    setState({
+    setCommandBarState({
       mode: 'input',
       kind: 'edit-date',
       prompt: datePrompt(activeDateField, params.completed),
       value,
+      cursorPosition: value.length,
       completed: params.completed,
       activeDateField,
       ...(params.creationDate != null ? { creationDate: params.creationDate } : {}),
@@ -136,13 +140,13 @@ export const useCommandBar = () => {
     });
   };
 
-  const openHelp = () => setState({ mode: 'help' });
+  const openHelp = () => setCommandBarState({ mode: 'help' });
   const openQuitConfirm = () => {
-    setState({ mode: 'confirm', prompt: 'Quit? (y/q/Q to quit, n/Esc to cancel)', kind: 'quit' });
+    setCommandBarState({ mode: 'confirm', prompt: 'Quit? (y/q/Q to quit, n/Esc to cancel)', kind: 'quit' });
   };
 
   const openDeleteConfirm = (description: string) => {
-    setState({
+    setCommandBarState({
       mode: 'confirm',
       prompt: `Are you sure you want to delete task "${description}"? (y/Y to delete, Esc to cancel)`,
       kind: 'delete'
@@ -150,12 +154,15 @@ export const useCommandBar = () => {
   };
 
   const cancel = () => {
-    if ((state.mode === 'input' && state.kind === 'filter') || (state.mode === 'idle' && filter != null)) {
+    if (
+      (commandBarState.mode === 'input' && commandBarState.kind === 'filter') ||
+      (commandBarState.mode === 'idle' && filter != null)
+    ) {
       clearFilter();
       return;
     }
 
-    setState({ mode: 'idle' });
+    setCommandBarState({ mode: 'idle' });
   };
 
   const toggleFilter = () => {
@@ -168,45 +175,318 @@ export const useCommandBar = () => {
   };
 
   const appendInput = (value: string) => {
-    setState((current) => {
+    setCommandBarState((current) => {
       if (current.mode !== 'input') {
         return current;
       }
 
-      const nextValue = `${current.value}${value}`;
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
 
-      if (current.kind === 'edit-date') {
-        return applyDateInputValue(current, nextValue);
-      }
+      const nextInputState = applyAppendInputToState(inputState, value);
 
       return {
         ...current,
-        value: nextValue
+        value: nextInputState.value,
+        cursorPosition: nextInputState.cursorPosition,
+        ...(isDateInput(nextInputState)
+          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
+          : {})
       };
     });
   };
 
   const backspace = () => {
-    setState((current) => {
+    setCommandBarState((current) => {
       if (current.mode !== 'input') {
         return current;
       }
 
-      const nextValue = current.value.slice(0, Math.max(current.value.length - 1, 0));
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
 
-      if (current.kind === 'edit-date') {
-        return applyDateInputValue(current, nextValue);
-      }
+      const nextInputState = applyBackspaceToState(inputState);
 
       return {
         ...current,
-        value: nextValue
+        value: nextInputState.value,
+        cursorPosition: nextInputState.cursorPosition,
+        ...(isDateInput(nextInputState)
+          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
+          : {})
+      };
+    });
+  };
+
+  const deleteCharForward = () => {
+    setCommandBarState((current) => {
+      if (current.mode !== 'input') {
+        return current;
+      }
+
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
+
+      const nextInputState = applyDeleteCharForwardToState(inputState);
+
+      return {
+        ...current,
+        value: nextInputState.value,
+        ...(isDateInput(nextInputState)
+          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
+          : {})
+      };
+    });
+  };
+
+  const moveCursorLeft = () => {
+    setCommandBarState((current) => {
+      if (current.mode !== 'input') {
+        return current;
+      }
+
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
+
+      const nextInputState = moveCursorLeftByOne(inputState);
+
+      return {
+        ...current,
+        cursorPosition: nextInputState.cursorPosition
+      };
+    });
+  };
+
+  const moveCursorRight = () => {
+    setCommandBarState((current) => {
+      if (current.mode !== 'input') {
+        return current;
+      }
+
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
+
+      const nextInputState = moveCursorRightByOne(inputState);
+
+      return {
+        ...current,
+        cursorPosition: nextInputState.cursorPosition
+      };
+    });
+  };
+
+  const moveCursorToStart = () => {
+    setCommandBarState((current) => {
+      if (current.mode !== 'input') {
+        return current;
+      }
+
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
+
+      const nextInputState = moveCursorToStartOfLine(inputState);
+
+      return {
+        ...current,
+        cursorPosition: nextInputState.cursorPosition
+      };
+    });
+  };
+
+  const moveCursorToEnd = () => {
+    setCommandBarState((current) => {
+      if (current.mode !== 'input') {
+        return current;
+      }
+
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
+
+      const nextInputState = moveCursorToEndOfLine(inputState);
+
+      return {
+        ...current,
+        cursorPosition: nextInputState.cursorPosition
+      };
+    });
+  };
+
+  const moveCursorWordLeft = () => {
+    setCommandBarState((current) => {
+      if (current.mode !== 'input') {
+        return current;
+      }
+
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
+
+      const nextInputState = moveCursorWordLeftByOne(inputState);
+
+      return {
+        ...current,
+        cursorPosition: nextInputState.cursorPosition
+      };
+    });
+  };
+
+  const moveCursorWordRight = () => {
+    setCommandBarState((current) => {
+      if (current.mode !== 'input') {
+        return current;
+      }
+
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
+
+      const nextInputState = moveCursorWordRightByOne(inputState);
+
+      return {
+        ...current,
+        cursorPosition: nextInputState.cursorPosition
+      };
+    });
+  };
+
+  const deleteWordBackward = () => {
+    setCommandBarState((current) => {
+      if (current.mode !== 'input') {
+        return current;
+      }
+
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
+
+      const nextInputState = deleteWordBackwardFromCursor(inputState);
+
+      return {
+        ...current,
+        value: nextInputState.value,
+        cursorPosition: nextInputState.cursorPosition,
+        ...(isDateInput(nextInputState)
+          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
+          : {})
+      };
+    });
+  };
+
+  const deleteToLineStart = () => {
+    setCommandBarState((current) => {
+      if (current.mode !== 'input') {
+        return current;
+      }
+
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
+
+      const nextInputState = deleteToLineStartFromCursor(inputState);
+
+      return {
+        ...current,
+        value: nextInputState.value,
+        cursorPosition: nextInputState.cursorPosition,
+        ...(isDateInput(nextInputState)
+          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
+          : {})
+      };
+    });
+  };
+
+  const deleteToLineEnd = () => {
+    setCommandBarState((current) => {
+      if (current.mode !== 'input') {
+        return current;
+      }
+
+      const inputState = isDateInput(current)
+        ? current
+        : {
+            kind: current.kind,
+            value: current.value,
+            cursorPosition: current.cursorPosition,
+            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+          };
+
+      const nextInputState = deleteToLineEndFromCursor(inputState);
+
+      return {
+        ...current,
+        value: nextInputState.value,
+        cursorPosition: nextInputState.cursorPosition,
+        ...(isDateInput(nextInputState)
+          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
+          : {})
       };
     });
   };
 
   const tab = () => {
-    setState((current) => {
+    setCommandBarState((current) => {
       if (current.mode !== 'input' || current.kind !== 'edit-date' || !current.completed) {
         return current;
       }
@@ -225,109 +505,130 @@ export const useCommandBar = () => {
   };
 
   const submit = (): SubmitAction => {
-    if (state.mode === 'confirm') {
+    if (commandBarState.mode === 'confirm') {
       return { type: 'quit' };
     }
 
-    if (state.mode !== 'input') {
+    if (commandBarState.mode !== 'input') {
       return { type: 'none' };
     }
 
-    if (state.kind === 'filter') {
-      const trimmedFilter = state.value.trim();
+    if (commandBarState.kind === 'filter') {
+      const trimmedFilter = commandBarState.value.trim();
       const nextFilter = trimmedFilter.length === 0 ? undefined : trimmedFilter;
       setFilter(nextFilter);
       setStatusText(nextFilter == null ? 'Filter cleared' : `Filter: ${nextFilter}`);
-      setState({ mode: 'idle' });
+      setCommandBarState({ mode: 'idle' });
       return { type: 'set-filter', value: nextFilter };
     }
 
-    if (state.kind === 'priority') {
-      const letter = state.value.trim().toUpperCase();
+    if (commandBarState.kind === 'priority') {
+      const letter = commandBarState.value.trim().toUpperCase();
       const priority = letter.length === 1 ? letter : undefined;
-      setState({ mode: 'idle' });
+      setCommandBarState({ mode: 'idle' });
       return priority == null ? { type: 'change-priority' } : { type: 'change-priority', priority };
     }
 
-    if (state.kind === 'add-priority') {
-      const letter = state.value.trim().toUpperCase();
+    if (commandBarState.kind === 'add-priority') {
+      const letter = commandBarState.value.trim().toUpperCase();
       const addPriority = letter.length === 1 ? letter : undefined;
 
-      setState({
+      setCommandBarState({
         mode: 'input',
         kind: 'add-description',
         prompt: 'Task description: ',
         value: '',
+        cursorPosition: 0,
         ...(addPriority != null ? { addPriority } : {})
       });
       return { type: 'none' };
     }
 
-    if (state.kind === 'add-description') {
-      const description = state.value.trim();
+    if (commandBarState.kind === 'add-description') {
+      const description = commandBarState.value.trim();
       if (description.length === 0) {
         setStatusText('Description is required');
         return { type: 'none' };
       }
 
-      setState({ mode: 'idle' });
-      return state.addPriority != null
-        ? { type: 'add', priority: state.addPriority, description }
+      setCommandBarState({ mode: 'idle' });
+      return commandBarState.addPriority != null
+        ? { type: 'add', priority: commandBarState.addPriority, description }
         : { type: 'add', description };
     }
 
-    if (state.kind === 'edit-description') {
-      const description = state.value.trim();
+    if (commandBarState.kind === 'edit-description') {
+      const description = commandBarState.value.trim();
       if (description.length === 0) {
         setStatusText('Description is required');
         return { type: 'none' };
       }
 
-      setState({ mode: 'idle' });
+      setCommandBarState({ mode: 'idle' });
       return { type: 'change-description', description };
     }
 
-    if (state.kind === 'edit-date') {
-      const value = state.value.trim();
+    if (commandBarState.kind === 'edit-date') {
+      const value = commandBarState.value.trim();
 
       const creationDate =
-        state.activeDateField === 'creation' ? (value.length === 0 ? undefined : value) : state.creationDate;
+        commandBarState.activeDateField === 'creation'
+          ? value.length === 0
+            ? undefined
+            : value
+          : commandBarState.creationDate;
       const completionDate =
-        state.activeDateField === 'completion' ? (value.length === 0 ? undefined : value) : state.completionDate;
+        commandBarState.activeDateField === 'completion'
+          ? value.length === 0
+            ? undefined
+            : value
+          : commandBarState.completionDate;
 
       if (creationDate != null && !DATE_PATTERN.test(creationDate)) {
-        setState({
-          ...state,
-          prompt: datePromptWithError(state.activeDateField, state.completed, 'Invalid created date.')
+        setCommandBarState({
+          ...commandBarState,
+          prompt: datePromptWithError(
+            commandBarState.activeDateField,
+            commandBarState.completed,
+            'Invalid created date.'
+          )
         });
         setStatusText('Created date must be YYYY-MM-DD');
         return { type: 'none' };
       }
 
-      if (state.completed) {
+      if (commandBarState.completed) {
         if (completionDate == null) {
-          setState({
-            ...state,
-            prompt: datePromptWithError(state.activeDateField, state.completed, 'Completed date is required.')
+          setCommandBarState({
+            ...commandBarState,
+            prompt: datePromptWithError(
+              commandBarState.activeDateField,
+              commandBarState.completed,
+              'Completed date is required.'
+            )
           });
           setStatusText('Completed date is required for done tasks');
           return { type: 'none' };
         }
 
         if (!DATE_PATTERN.test(completionDate)) {
-          setState({
-            ...state,
-            prompt: datePromptWithError(state.activeDateField, state.completed, 'Invalid completed date.')
+          setCommandBarState({
+            ...commandBarState,
+            prompt: datePromptWithError(
+              commandBarState.activeDateField,
+              commandBarState.completed,
+              'Invalid completed date.'
+            )
           });
           setStatusText('Completed date must be YYYY-MM-DD');
           return { type: 'none' };
         }
 
-        setState({ mode: 'idle' });
+        setCommandBarState({ mode: 'idle' });
         return { type: 'change-dates', creationDate, completionDate };
       }
 
-      setState({ mode: 'idle' });
+      setCommandBarState({ mode: 'idle' });
       return { type: 'change-dates', creationDate };
     }
 
@@ -335,7 +636,7 @@ export const useCommandBar = () => {
   };
 
   return {
-    state,
+    state: commandBarState,
     statusText,
     setStatusText,
     filter,
@@ -351,9 +652,19 @@ export const useCommandBar = () => {
     cancel,
     appendInput,
     backspace,
+    deleteCharForward,
+    moveCursorLeft,
+    moveCursorRight,
+    moveCursorToStart,
+    moveCursorToEnd,
+    moveCursorWordLeft,
+    moveCursorWordRight,
+    deleteWordBackward,
+    deleteToLineStart,
+    deleteToLineEnd,
     tab,
     submit,
     clearFilter,
-    dismissHelp: () => setState({ mode: 'idle' })
+    dismissHelp: () => setCommandBarState({ mode: 'idle' })
   };
 };

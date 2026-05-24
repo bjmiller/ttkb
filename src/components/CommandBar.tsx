@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Box, Text } from 'ink';
 
 import type { CursorStyle } from '../config/types';
@@ -14,13 +14,23 @@ type CommandBarProps = {
   helpBuildInfo?: string;
 };
 
-const CURSOR_BLINK_INTERVAL_MS = 530;
+const CURSOR_SHAPE_CODES: Record<string, string> = {
+  block_blink: '\u001b[1 q',
+  block_noblink: '\u001b[2 q',
+  underline_blink: '\u001b[3 q',
+  underline_noblink: '\u001b[4 q',
+  bar_blink: '\u001b[5 q',
+  bar_noblink: '\u001b[6 q'
+};
 
-const CURSOR_GLYPH_BY_STYLE: Record<CursorStyle['shape'], string> = {
-  native: '█',
-  block: '█',
-  bar: '│',
-  underline: '▁'
+const DEFAULT_TERMINAL_HEIGHT = 24;
+const CONTENT_COLUMN_OFFSET = 3;
+
+const getInputMode = (state: CommandBarState) => {
+  if (state.mode === 'input') {
+    return state;
+  }
+  return null;
 };
 
 export const CommandBar = ({
@@ -33,30 +43,60 @@ export const CommandBar = ({
   helpBuildInfo
 }: CommandBarProps) => {
   const resolvedCursorStyle: CursorStyle = cursorStyle ?? { shape: 'block', blink: false };
-  const cursorGlyph = CURSOR_GLYPH_BY_STYLE[resolvedCursorStyle.shape];
-  const [blinkVisible, setBlinkVisible] = useState(true);
+
+  const inputMode = getInputMode(state);
+
+  const shapeCode = useMemo(() => {
+    if (resolvedCursorStyle.shape === 'native') {
+      return null;
+    }
+    const key = `${resolvedCursorStyle.shape}_${resolvedCursorStyle.blink ? 'blink' : 'noblink'}`;
+    return CURSOR_SHAPE_CODES[key] ?? null;
+  }, [resolvedCursorStyle.shape, resolvedCursorStyle.blink]);
+
+  const terminalHeight = process.stdout.rows ?? DEFAULT_TERMINAL_HEIGHT;
+  const cursorRow = inputMode != null ? terminalHeight - 1 : null;
+  const cursorCol =
+    inputMode != null ? CONTENT_COLUMN_OFFSET + inputMode.prompt.length + inputMode.cursorPosition : null;
 
   useEffect(() => {
-    if (state.mode !== 'input' || !resolvedCursorStyle.blink) {
-      setBlinkVisible(true);
+    if (cursorRow == null || cursorCol == null) {
+      process.stdout.write('\u001b[?25l');
       return;
     }
 
-    const intervalId = setInterval(() => {
-      setBlinkVisible((current) => !current);
-    }, CURSOR_BLINK_INTERVAL_MS);
+    const shape = shapeCode ?? '';
+    process.stdout.write(`\u001b[${cursorRow};${cursorCol}H${shape}\u001b[?25h`);
+  }, [cursorRow, cursorCol, shapeCode]);
 
-    return () => clearInterval(intervalId);
-  }, [state.mode, resolvedCursorStyle.blink]);
+  const renderInputText = () => {
+    if (!inputMode) {
+      return null;
+    }
+
+    const text = inputMode.value;
+    const chars: React.ReactNode[] = [];
+
+    for (let i = 0; i < text.length; i++) {
+      chars.push(
+        <Text key={i} color="cyan">
+          {text[i]}
+        </Text>
+      );
+    }
+
+    return (
+      <>
+        {inputMode.prompt}
+        {chars}
+      </>
+    );
+  };
 
   return (
     <Box borderStyle="single" borderColor="gray" paddingX={1} minHeight={3}>
-      {state.mode === 'input' ? (
-        <Text>
-          {state.prompt}
-          <Text color="cyan">{state.value}</Text>
-          {blinkVisible ? <Text color="cyan">{cursorGlyph}</Text> : null}
-        </Text>
+      {inputMode != null ? (
+        <Text>{renderInputText()}</Text>
       ) : state.mode === 'confirm' ? (
         <Text color="yellow">{state.prompt}</Text>
       ) : state.mode === 'help' ? (
