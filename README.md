@@ -1,6 +1,7 @@
 # ttkb
 
 Terminal Kanban viewer/editor for `todo.txt` files.
+![Image of application screen](images/screenshot.png)
 
 ## Requirements
 
