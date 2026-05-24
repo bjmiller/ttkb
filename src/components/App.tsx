@@ -142,6 +142,19 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     onMoveDown: viewMode === 'table' ? moveTableDown : selection.moveDown,
     onMoveLeft: viewMode === 'table' ? () => {} : selection.moveLeft,
     onMoveRight: viewMode === 'table' ? () => {} : selection.moveRight,
+    onMoveToTop:
+      viewMode === 'table'
+        ? () => setTableSelectedIndex(0)
+        : () => selection.setColumnIndex(selection.selectedColumnKey, 0),
+    onMoveToBottom:
+      viewMode === 'table'
+        ? () => setTableSelectedIndex(Math.max(0, tableRows.length - 1))
+        : () => {
+            const tasks = columns[selection.selectedColumnKey];
+            if (tasks.length > 0) {
+              selection.setColumnIndex(selection.selectedColumnKey, tasks.length - 1);
+            }
+          },
     onToggleDone: toggleSelected,
     onToggleDoing: toggleSelectedDoing,
     onAdd: commandBar.openAdd,

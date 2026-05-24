@@ -22,6 +22,8 @@ type KeyActions = {
   onHelp: () => void;
   onQuitConfirm: () => void;
   onDelete: () => void;
+  onMoveToTop: () => void;
+  onMoveToBottom: () => void;
   onCancel: () => void;
   onSubmit: () => void;
   onTab: () => void;
@@ -169,6 +171,16 @@ export const useKeyboardCommands = (actions: KeyActions) => {
       return;
     }
 
+    if (key.meta && key.upArrow) {
+      actions.onMoveToTop();
+      return;
+    }
+
+    if (key.meta && key.downArrow) {
+      actions.onMoveToBottom();
+      return;
+    }
+
     if (key.upArrow) {
       actions.onMoveUp();
       return;
@@ -199,67 +211,67 @@ export const useKeyboardCommands = (actions: KeyActions) => {
       return;
     }
 
-    if (input === 'x') {
-      actions.onToggleDone();
-      return;
-    }
-
     if (input === 'd' && !key.ctrl && !key.meta) {
       actions.onToggleDoing();
       return;
     }
 
-    if (input === 'a') {
+    if (input === 'x' && !key.ctrl && !key.meta) {
+      actions.onToggleDone();
+      return;
+    }
+
+    if (input === 'a' && !key.ctrl && !key.meta) {
       actions.onAdd();
       return;
     }
 
-    if (input === 'e') {
+    if (input === 'e' && !key.ctrl && !key.meta) {
       actions.onEdit();
       return;
     }
 
-    if (input === ';') {
+    if (input === ';' && !key.meta) {
       actions.onEditDates();
       return;
     }
 
-    if (input === 'p') {
+    if (input === 'p' && !key.ctrl && !key.meta) {
       actions.onPriority();
       return;
     }
 
-    if (input === 's') {
+    if (input === 's' && !key.ctrl && !key.meta) {
       actions.onCycleTableSort();
       return;
     }
 
-    if (input === '.') {
+    if (input === '.' && !key.meta) {
       actions.onToggleTableSortDirection();
       return;
     }
 
-    if (input === 'f') {
+    if (input === 'f' && !key.ctrl && !key.meta) {
       actions.onFilter();
       return;
     }
 
-    if (input === 'v') {
+    if (input === 'v' && !key.ctrl && !key.meta) {
       actions.onToggleView();
       return;
     }
 
-    if (input === 'c') {
+    if (input === 'c' && !key.ctrl && !key.meta) {
       actions.onCleanDone();
       return;
     }
 
-    if (input === '?') {
+    if (input === '?' && !key.meta) {
       actions.onHelp();
       return;
     }
 
-    if (input === 'Q') {
+    if (input === 'Q' && !key.ctrl && !key.meta) {
       actions.onQuitConfirm();
     }
   });
