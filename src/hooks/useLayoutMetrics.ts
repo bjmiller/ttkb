@@ -2,10 +2,9 @@ import { useMemo } from 'react';
 
 import { getVisibleCardCount } from '../logic/cardView';
 import type { ColumnKey, Columns } from '../logic/columns';
+import { useTerminalSize } from './useTerminalSize';
 
 const RESERVED_BOTTOM_ROWS = 4;
-const DEFAULT_TERMINAL_HEIGHT = 24;
-const DEFAULT_TERMINAL_WIDTH = 80;
 const TABLE_ROW_HEIGHT = 1;
 const COLUMN_HEADER_ROWS = 1;
 const COLUMN_COUNT = 3;
@@ -35,8 +34,7 @@ type LayoutMetrics = {
 };
 
 export const useLayoutMetrics = ({ columns, selectedColumn, scrollOffset }: UseLayoutMetricsParams): LayoutMetrics => {
-  const terminalHeight = process.stdout.rows ?? DEFAULT_TERMINAL_HEIGHT;
-  const terminalWidth = process.stdout.columns ?? DEFAULT_TERMINAL_WIDTH;
+  const { rows: terminalHeight, columns: terminalWidth } = useTerminalSize();
 
   const viewportRows = Math.max(1, terminalHeight - RESERVED_BOTTOM_ROWS);
   const cardVisibleRows = Math.max(1, viewportRows - COLUMN_HEADER_ROWS);

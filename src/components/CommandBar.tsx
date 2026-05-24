@@ -3,6 +3,7 @@ import { Box, Text } from 'ink';
 
 import type { CursorStyle } from '../config/types';
 import type { CommandBarState } from '../hooks/useCommandBar';
+import { useTerminalSize } from '../hooks/useTerminalSize';
 
 type CommandBarProps = {
   state: CommandBarState;
@@ -23,7 +24,6 @@ const CURSOR_SHAPE_CODES: Record<string, string> = {
   bar_noblink: '\u001b[6 q'
 };
 
-const DEFAULT_TERMINAL_HEIGHT = 24;
 const CONTENT_COLUMN_OFFSET = 3;
 
 const getInputMode = (state: CommandBarState) => {
@@ -54,7 +54,7 @@ export const CommandBar = ({
     return CURSOR_SHAPE_CODES[key] ?? null;
   }, [resolvedCursorStyle.shape, resolvedCursorStyle.blink]);
 
-  const terminalHeight = process.stdout.rows ?? DEFAULT_TERMINAL_HEIGHT;
+  const { rows: terminalHeight } = useTerminalSize();
   const cursorRow = inputMode != null ? terminalHeight - 1 : null;
   const cursorCol =
     inputMode != null ? CONTENT_COLUMN_OFFSET + inputMode.prompt.length + inputMode.cursorPosition : null;
