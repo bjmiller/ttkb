@@ -172,7 +172,10 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     onDeleteToLineStart: commandBar.deleteToLineStart,
     onDeleteToLineEnd: commandBar.deleteToLineEnd,
     onConfirmQuit: () => app.exit(),
-    onConfirmDelete: deleteSelected,
+    onConfirmDelete: () => {
+      deleteSelected();
+      commandBar.cancel();
+    },
     onDismissHelp: commandBar.dismissHelp,
     onClearFilter: clearFilter
   });
