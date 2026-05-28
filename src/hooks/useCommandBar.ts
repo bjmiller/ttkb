@@ -162,6 +162,11 @@ export const useCommandBar = () => {
       return;
     }
 
+    if (commandBarState.mode === 'idle') {
+      return;
+    }
+
+    setStatusText('Operation cancelled');
     setCommandBarState({ mode: 'idle' });
   };
 
