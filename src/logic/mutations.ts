@@ -32,6 +32,57 @@ const hasStatusDoing = (item: TodoItem): boolean => {
 
 const STATUS_DOING_TOKEN = 'status:doing';
 const PRIORITY_TAG_TOKEN_PATTERN = /^pri:[A-Z]$/;
+const PROJECT_TAG_PATTERN = /^\+([^\s+]+)$/;
+const CONTEXT_TAG_PATTERN = /^@([^\s@]+)$/;
+const METADATA_TAG_PATTERN = /^([A-Za-z][\w-]*):(\S+)$/;
+
+type ExtractedTags = {
+  description: string;
+  projects: string[];
+  contexts: string[];
+  metadata: TodoItem['metadata'];
+};
+
+const extractTags = (raw: string): ExtractedTags => {
+  const tokens = raw.trim().split(/\s+/);
+  const projects: string[] = [];
+  const contexts: string[] = [];
+  const metadata: TodoItem['metadata'] = [];
+  const words: string[] = [];
+
+  for (const token of tokens) {
+    const projectMatch = token.match(PROJECT_TAG_PATTERN);
+    if (projectMatch) {
+      const [, project] = projectMatch;
+      if (project != null) {
+        projects.push(project);
+      }
+      continue;
+    }
+
+    const contextMatch = token.match(CONTEXT_TAG_PATTERN);
+    if (contextMatch) {
+      const [, context] = contextMatch;
+      if (context != null) {
+        contexts.push(context);
+      }
+      continue;
+    }
+
+    const metadataMatch = token.match(METADATA_TAG_PATTERN);
+    if (metadataMatch) {
+      const [, key, value] = metadataMatch;
+      if (key != null && value != null) {
+        metadata.push({ key, value });
+        continue;
+      }
+    }
+
+    words.push(token);
+  }
+
+  return { description: words.join(' '), projects, contexts, metadata };
+};
 
 const withoutStatusDoingInDescription = (description: string): string => {
   const cleaned = description
@@ -75,16 +126,17 @@ export const toggleCompletion = (item: TodoItem): TodoItem => {
 };
 
 export const addTask = (params: { lineNumber: number; description: string; priority?: string }): TodoItem => {
+  const { description, projects, contexts, metadata } = extractTags(params.description);
   const base: TodoItem = {
     kind: 'todo',
     lineNumber: params.lineNumber,
     raw: '',
     completed: false,
     creationDate: today(),
-    description: params.description.trim(),
-    projects: [],
-    contexts: [],
-    metadata: [],
+    description,
+    projects,
+    contexts,
+    metadata,
     dirty: true
   };
 
@@ -119,9 +171,13 @@ export const changePriority = (item: TodoItem, priority: string | undefined): To
 };
 
 export const changeDescription = (item: TodoItem, description: string): TodoItem => {
+  const { description: cleanDescription, projects, contexts, metadata } = extractTags(description);
   return {
     ...item,
-    description: description.trim(),
+    description: cleanDescription,
+    projects,
+    contexts,
+    metadata,
     dirty: true
   };
 };

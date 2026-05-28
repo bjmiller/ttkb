@@ -92,6 +92,19 @@ describe('addTask', () => {
     expect(created.creationDate).toBeDefined();
     expect(created.dirty).toBe(true);
   });
+
+  it('extracts projects and contexts from description', () => {
+    const created = addTask({
+      lineNumber: 6,
+      description: 'Fix bug +project @context due:tomorrow'
+    });
+
+    expect(created.description).toBe('Fix bug');
+    expect(created.projects).toEqual(['project']);
+    expect(created.contexts).toEqual(['context']);
+    expect(created.metadata).toEqual([{ key: 'due', value: 'tomorrow' }]);
+    expect(created.dirty).toBe(true);
+  });
 });
 
 describe('changePriority', () => {
@@ -150,6 +163,16 @@ describe('changeDescription', () => {
     expect(changed.priority).toBe('B');
     expect(changed.creationDate).toBe('2026-01-01');
     expect(changed.completionDate).toBe('2026-01-03');
+    expect(changed.dirty).toBe(true);
+  });
+
+  it('extracts projects and contexts from new description', () => {
+    const source = makeTodo({ priority: 'A' });
+    const changed = changeDescription(source, 'Updated task +project @context');
+
+    expect(changed.description).toBe('Updated task');
+    expect(changed.projects).toEqual(['project']);
+    expect(changed.contexts).toEqual(['context']);
     expect(changed.dirty).toBe(true);
   });
 });
