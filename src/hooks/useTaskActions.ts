@@ -11,7 +11,7 @@ import {
   toggleDoing
 } from '../logic/mutations';
 import { appendLinesToFile } from '../logic/persistence';
-import type { TodoItem, UnparseableTodoItem } from '../parser/types';
+import { DATE_PATTERN, type TodoItem, type UnparseableTodoItem } from '../parser/types';
 import { byLineNumber } from '../logic/ordering';
 import { type ViewMode } from '../types';
 
@@ -241,6 +241,61 @@ export const useTaskActions = ({
     });
   };
 
+  const PRIORITY_TOKEN_PATTERN = /^\([A-Z]\)$/;
+
+  const extractBodyFromRaw = (item: TodoItem): string => {
+    if (item.raw.length === 0) {
+      const parts: string[] = [item.description];
+
+      for (const project of item.projects) {
+        parts.push(`+${project}`);
+      }
+
+      for (const context of item.contexts) {
+        parts.push(`@${context}`);
+      }
+
+      for (const tag of item.metadata) {
+        parts.push(`${tag.key}:${tag.value}`);
+      }
+
+      return parts.join(' ');
+    }
+
+    const tokens = item.raw.trim().split(/\s+/);
+    const maybeDate = (index: number): string | undefined => {
+      const token = tokens[index];
+      if (token != null && DATE_PATTERN.test(token)) {
+        return token;
+      }
+
+      return undefined;
+    };
+
+    let skip = 0;
+
+    if (tokens[skip] === 'x') {
+      skip += 1;
+    }
+
+    if (!item.completed) {
+      const token = tokens[skip];
+      if (token != null && PRIORITY_TOKEN_PATTERN.test(token)) {
+        skip += 1;
+      }
+    }
+
+    if (item.completed && maybeDate(skip) != null) {
+      skip += 1;
+    }
+
+    if (maybeDate(skip) != null) {
+      skip += 1;
+    }
+
+    return tokens.slice(skip).join(' ');
+  };
+
   const beginEditSelectedDescription = () => {
     const selected = getActiveSelected();
     if (selected?.kind !== 'todo') {
@@ -248,7 +303,7 @@ export const useTaskActions = ({
       return;
     }
 
-    commandBar.openEditDescription(selected.item.description);
+    commandBar.openEditDescription(extractBodyFromRaw(selected.item));
   };
 
   const beginEditSelectedDates = () => {
