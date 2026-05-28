@@ -1,3 +1,4 @@
+import { readdirSync, unlinkSync } from 'node:fs';
 import { argv, cwd, env, execPath, exit } from 'node:process';
 
 import { type } from 'arktype';
@@ -106,6 +107,20 @@ const build = (options: BuildOptions): number => {
 const main = async () => {
   const options = await parseArgs();
   const exitCode = build(options);
+
+  if (exitCode === 0) {
+    const rootDir = cwd();
+    for (const entry of readdirSync(rootDir)) {
+      if (entry.endsWith('.bun-build')) {
+        try {
+          unlinkSync(`${rootDir}/${entry}`);
+        } catch {
+          // ignore
+        }
+      }
+    }
+  }
+
   exit(exitCode);
 };
 
