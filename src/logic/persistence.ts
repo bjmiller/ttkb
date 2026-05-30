@@ -23,7 +23,7 @@ const createTempPath = (filePath: string): string => {
   return path.join(dir, `.${base}.tmp-${Date.now()}-${Math.random().toString(HASH_RADIX).slice(HASH_SLICE_START)}`);
 };
 
-const writeTextAtomic = async (filePath: string, content: string): Promise<void> => {
+export const writeTextAtomic = async (filePath: string, content: string): Promise<void> => {
   const tempPath = createTempPath(filePath);
   await Bun.write(tempPath, content);
 

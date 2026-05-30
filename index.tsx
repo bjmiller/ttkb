@@ -36,7 +36,10 @@ const main = async () => {
   const resolvedCursorStyle = resolveCursorStyle(explicitCursorShape, explicitCursorBlink, detectedCursor);
 
   enterAlternateScreen();
-  const app = render(<App todoFilePath={config.todoFilePath} cursorStyle={resolvedCursorStyle} />);
+  const app = render(<App todoFilePath={config.todoFilePath} cursorStyle={resolvedCursorStyle} />, {
+    exitOnCtrlC: false,
+    kittyKeyboard: { mode: 'enabled', flags: ['disambiguateEscapeCodes'] }
+  });
 
   process.on('SIGINT', () => {
     leaveAlternateScreen();

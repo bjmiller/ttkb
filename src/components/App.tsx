@@ -32,7 +32,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
   const app = useApp();
   const [scrollOffset, setScrollOffset] = useState(0);
 
-  const { items, errors, status: fileStatus, error: fileError, mutateTodos } = useTodoFile(todoFilePath);
+  const { items, errors, status: fileStatus, error: fileError, mutateTodos, undo } = useTodoFile(todoFilePath);
   const commandBar = useCommandBar();
 
   const columns = useMemo(() => buildColumns(items, errors, commandBar.filter), [items, errors, commandBar.filter]);
@@ -170,6 +170,7 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
     onQuitConfirm: commandBar.openQuitConfirm,
     onDelete: openDeleteConfirm,
     onCancel: cancel,
+    onExit: () => app.exit(),
     onSubmit: applySubmit,
     onTab: commandBar.tab,
     onAppendInput: commandBar.appendInput,
@@ -190,7 +191,10 @@ export const App = ({ todoFilePath, cursorStyle }: AppProps) => {
       commandBar.cancel();
     },
     onDismissHelp: commandBar.dismissHelp,
-    onClearFilter: clearFilter
+    onClearFilter: clearFilter,
+    onUndo: () => {
+      void undo();
+    }
   });
 
   return (

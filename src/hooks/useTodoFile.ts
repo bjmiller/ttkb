@@ -2,15 +2,25 @@ import { watch } from 'node:fs';
 import path from 'node:path';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { readTodoFile, writeTodoFileAtomic } from '../logic/persistence';
+import { readTodoFile, writeTextAtomic, writeTodoFileAtomic } from '../logic/persistence';
 import type { ParsedTodoLine, TodoItem, UnparseableTodoItem } from '../parser/types';
 import { byLineNumber } from '../logic/ordering';
+
+const MAX_UNDO_DEPTH = 50;
+const DONE_FILE_NAME = 'done.txt';
+
+type UndoEntry = {
+  todoLines: ParsedTodoLine[];
+  doneContent: string;
+};
 
 export const useTodoFile = (filePath: string) => {
   const [lines, setLines] = useState<ParsedTodoLine[]>([]);
   const [error, setError] = useState<string | undefined>();
   const [status, setStatus] = useState<string>('Loading...');
   const skipWatchRef = useRef(false);
+  const undoStackRef = useRef<UndoEntry[]>([]);
+  const doneFilePath = path.join(path.dirname(filePath), DONE_FILE_NAME);
 
   const load = useCallback(async () => {
     try {
@@ -91,6 +101,14 @@ export const useTodoFile = (filePath: string) => {
         }
       }
 
+      let doneContent: string = '';
+      try {
+        const doneFile = Bun.file(doneFilePath);
+        doneContent = (await doneFile.exists()) ? await doneFile.text() : '';
+      } catch {
+        doneContent = '';
+      }
+
       const nextMutatedLines = await mutator(items, errors);
 
       const nextLines = nextMutatedLines
@@ -100,10 +118,38 @@ export const useTodoFile = (filePath: string) => {
         })
         .toSorted(byLineNumber);
 
+      undoStackRef.current.push({ todoLines: structuredClone(lines), doneContent });
+      if (undoStackRef.current.length > MAX_UNDO_DEPTH) {
+        undoStackRef.current.shift();
+      }
+
       await persist(nextLines);
     },
-    [lines, persist]
+    [lines, persist, doneFilePath]
   );
+
+  const undo = useCallback(async () => {
+    const snapshot = undoStackRef.current.pop();
+    if (snapshot == null) {
+      setStatus('Nothing to undo');
+      return;
+    }
+
+    try {
+      skipWatchRef.current = true;
+
+      await writeTodoFileAtomic(filePath, snapshot.todoLines);
+      await writeTextAtomic(doneFilePath, snapshot.doneContent);
+
+      setLines(snapshot.todoLines);
+      setStatus('Undone');
+      setError(undefined);
+    } catch (saveError) {
+      const message = saveError instanceof Error ? saveError.message : 'Failed to write todo file';
+      setError(message);
+      setStatus('Undo failed');
+    }
+  }, [filePath, doneFilePath]);
 
   const items = useMemo(() => lines.filter((line): line is TodoItem => line.kind === 'todo'), [lines]);
   const errors = useMemo(
@@ -118,6 +164,7 @@ export const useTodoFile = (filePath: string) => {
     status,
     error,
     reload: load,
-    mutateTodos
+    mutateTodos,
+    undo
   };
 };

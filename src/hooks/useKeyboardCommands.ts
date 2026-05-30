@@ -25,6 +25,7 @@ type KeyActions = {
   onMoveToTop: () => void;
   onMoveToBottom: () => void;
   onCancel: () => void;
+  onExit: () => void;
   onSubmit: () => void;
   onTab: () => void;
   onAppendInput: (text: string) => void;
@@ -43,6 +44,7 @@ type KeyActions = {
   onConfirmDelete: () => void;
   onDismissHelp: () => void;
   onClearFilter: () => void;
+  onUndo: () => void;
 };
 
 export const useKeyboardCommands = (actions: KeyActions) => {
@@ -203,6 +205,16 @@ export const useKeyboardCommands = (actions: KeyActions) => {
 
     if (key.escape) {
       actions.onCancel();
+      return;
+    }
+
+    if (process.platform === 'darwin' ? key.super && input === 'z' : key.ctrl && input === 'z') {
+      actions.onUndo();
+      return;
+    }
+
+    if (key.ctrl && input === 'c') {
+      actions.onExit();
       return;
     }
 
