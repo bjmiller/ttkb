@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
 
-import { writeTodoFileAtomic, appendLinesToFile, readTodoFile } from '../persistence';
+import { writeTextAtomic, appendLinesToFile, readTodoFile } from '../persistence';
 import { parseTodoLine } from '../../parser/parse';
 
 const SECOND_LINE_NUMBER = 2;
@@ -13,7 +13,7 @@ const makeTempPath = (suffix: string): string => {
   return `${process.cwd()}/.tmp-ttkb-persistence-${suffix}-${Date.now()}.txt`;
 };
 
-describe('writeTodoFileAtomic', () => {
+describe('writeTextAtomic', () => {
   it('returns empty data when source file does not exist', async () => {
     const filePath = makeTempPath('missing');
     const parsed = await readTodoFile(filePath);
@@ -26,10 +26,22 @@ describe('writeTodoFileAtomic', () => {
     const filePath = makeTempPath('write');
     const lines = [parseTodoLine(FIRST_TASK, 1), parseTodoLine(SECOND_TASK, SECOND_LINE_NUMBER)];
 
-    await writeTodoFileAtomic(filePath, lines);
+    await writeTextAtomic(filePath, lines);
     const content = await Bun.file(filePath).text();
 
     expect(content).toBe(`${FIRST_TASK}\n${SECOND_TASK}\n`);
+
+    await Bun.file(filePath).delete();
+  });
+
+  it('writes raw string content to the destination file', async () => {
+    const filePath = makeTempPath('raw');
+    const content = 'raw content line 1\nraw content line 2\n';
+
+    await writeTextAtomic(filePath, content);
+    const result = await Bun.file(filePath).text();
+
+    expect(result).toBe(content);
 
     await Bun.file(filePath).delete();
   });

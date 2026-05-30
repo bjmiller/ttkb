@@ -5,6 +5,8 @@ import { parseTodoFile } from '../parser/parse';
 import { serializeTodoItems } from '../parser/serialize';
 import type { ParsedTodoLine } from '../parser/types';
 
+type AtomicContent = string | ParsedTodoLine[];
+
 const HASH_RADIX = 16;
 const HASH_SLICE_START = 2;
 const NEWLINE = '\n';
@@ -23,9 +25,18 @@ const createTempPath = (filePath: string): string => {
   return path.join(dir, `.${base}.tmp-${Date.now()}-${Math.random().toString(HASH_RADIX).slice(HASH_SLICE_START)}`);
 };
 
-export const writeTextAtomic = async (filePath: string, content: string): Promise<void> => {
+const resolveContent = (content: AtomicContent): string => {
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  return ensureTrailingNewline(serializeTodoItems(content));
+};
+
+export const writeTextAtomic = async (filePath: string, content: AtomicContent): Promise<void> => {
+  const resolved = resolveContent(content);
   const tempPath = createTempPath(filePath);
-  await Bun.write(tempPath, content);
+  await Bun.write(tempPath, resolved);
 
   try {
     await rename(tempPath, filePath);
@@ -47,10 +58,6 @@ export const readTodoFile = async (filePath: string) => {
   }
 
   return parseTodoFile(filePath);
-};
-
-export const writeTodoFileAtomic = async (filePath: string, lines: ParsedTodoLine[]): Promise<void> => {
-  await writeTextAtomic(filePath, ensureTrailingNewline(serializeTodoItems(lines)));
 };
 
 export const appendLinesToFile = async (filePath: string, lines: ParsedTodoLine[]): Promise<void> => {

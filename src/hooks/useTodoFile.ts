@@ -2,7 +2,7 @@ import { watch } from 'node:fs';
 import path from 'node:path';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { readTodoFile, writeTextAtomic, writeTodoFileAtomic } from '../logic/persistence';
+import { readTodoFile, writeTextAtomic } from '../logic/persistence';
 import type { ParsedTodoLine, TodoItem, UnparseableTodoItem } from '../parser/types';
 import { byLineNumber } from '../logic/ordering';
 
@@ -73,7 +73,7 @@ export const useTodoFile = (filePath: string) => {
     async (nextLines: ParsedTodoLine[]) => {
       try {
         skipWatchRef.current = true;
-        await writeTodoFileAtomic(filePath, nextLines);
+        await writeTextAtomic(filePath, nextLines);
         setLines(nextLines);
         setStatus('Saved');
         setError(undefined);
@@ -138,7 +138,7 @@ export const useTodoFile = (filePath: string) => {
     try {
       skipWatchRef.current = true;
 
-      await writeTodoFileAtomic(filePath, snapshot.todoLines);
+      await writeTextAtomic(filePath, snapshot.todoLines);
       await writeTextAtomic(doneFilePath, snapshot.doneContent);
 
       setLines(snapshot.todoLines);
