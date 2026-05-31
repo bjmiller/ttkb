@@ -3,6 +3,8 @@ import { type } from 'arktype';
 export const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 export const PRIORITY_PATTERN = /^[A-Z]$/;
 export const PRIORITY_TAG_KEY = 'pri';
+export const PRIORITY_TOKEN_PATTERN = /^\([A-Z]\)$/;
+export const DONE_FILE_NAME = 'done.txt';
 
 export const MetadataTagSchema = type({
   key: 'string',

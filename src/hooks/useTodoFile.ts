@@ -3,11 +3,10 @@ import path from 'node:path';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { readTodoFile, writeTextAtomic } from '../logic/persistence';
-import type { ParsedTodoLine, TodoItem, UnparseableTodoItem } from '../parser/types';
+import { DONE_FILE_NAME, type ParsedTodoLine, type TodoItem, type UnparseableTodoItem } from '../parser/types';
 import { byLineNumber } from '../logic/ordering';
 
 const MAX_UNDO_DEPTH = 50;
-const DONE_FILE_NAME = 'done.txt';
 
 type UndoEntry = {
   todoLines: ParsedTodoLine[];

@@ -11,7 +11,13 @@ import {
   toggleDoing
 } from '../logic/mutations';
 import { appendLinesToFile } from '../logic/persistence';
-import { DATE_PATTERN, type TodoItem, type UnparseableTodoItem } from '../parser/types';
+import {
+  DATE_PATTERN,
+  DONE_FILE_NAME,
+  PRIORITY_TOKEN_PATTERN,
+  type TodoItem,
+  type UnparseableTodoItem
+} from '../parser/types';
 import { byLineNumber } from '../logic/ordering';
 import { type ViewMode } from '../types';
 
@@ -49,8 +55,6 @@ type UseTaskActionsParams = {
   preserveSelection: (lineNumber: number) => void;
   exit: () => void;
 };
-
-const DONE_FILE_NAME = 'done.txt';
 
 export const useTaskActions = ({
   todoFilePath,
@@ -202,8 +206,6 @@ export const useTaskActions = ({
       return [...nextTodoItems, ...nextParseErrors].toSorted(byLineNumber);
     });
   };
-
-  const PRIORITY_TOKEN_PATTERN = /^\([A-Z]\)$/;
 
   const extractBodyFromRaw = (item: TodoItem): string => {
     if (item.raw.length === 0) {

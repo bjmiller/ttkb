@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import type { ColumnKey, Columns, DisplayTask } from '../logic/columns';
+import { buildTableRows } from '../logic/buildTableRows';
 import { findCardSelectionByLineNumber, findTableSelectionIndexByLineNumber } from '../logic/selection';
 import type { TableRow, TableSort } from '../logic/tableTypes';
 import { sortTableRows } from '../logic/tableSort';
@@ -14,14 +15,6 @@ type SelectionBridge = {
 type UseTableViewStateParams = {
   columns: Columns;
   selection: SelectionBridge;
-};
-
-const buildTableRows = (columns: Columns): TableRow[] => {
-  return [
-    ...columns.backlog.map((task) => ({ status: 'backlog' as const, task })),
-    ...columns.doing.map((task) => ({ status: 'doing' as const, task })),
-    ...columns.done.map((task) => ({ status: 'done' as const, task }))
-  ];
 };
 
 export const useTableViewState = ({ columns, selection }: UseTableViewStateParams) => {
