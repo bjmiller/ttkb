@@ -14,7 +14,8 @@ import {
   deleteWordBackwardFromCursor,
   deleteToLineStartFromCursor,
   deleteToLineEndFromCursor,
-  isDateInput
+  isDateInput,
+  type InputState
 } from '../logic/inputEditing';
 
 type IdleMode = { mode: 'idle' };
@@ -179,315 +180,79 @@ export const useCommandBar = () => {
     openFilter();
   };
 
-  const appendInput = (value: string) => {
+  const applyInputOperation = (op: (state: InputState) => InputState) => {
     setCommandBarState((current) => {
       if (current.mode !== 'input') {
         return current;
       }
 
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
+      const inputState =
+        current.kind === 'edit-date'
+          ? current
+          : {
+              kind: current.kind,
+              value: current.value,
+              cursorPosition: current.cursorPosition,
+              ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
+            };
 
-      const nextInputState = applyAppendInputToState(inputState, value);
+      const next = op(inputState);
 
       return {
         ...current,
-        value: nextInputState.value,
-        cursorPosition: nextInputState.cursorPosition,
-        ...(isDateInput(nextInputState)
-          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
-          : {})
+        value: next.value,
+        cursorPosition: next.cursorPosition,
+        ...(isDateInput(next) ? { creationDate: next.creationDate, completionDate: next.completionDate } : {})
       };
     });
+  };
+
+  const appendInput = (value: string) => {
+    applyInputOperation((s) => applyAppendInputToState(s, value));
   };
 
   const backspace = () => {
-    setCommandBarState((current) => {
-      if (current.mode !== 'input') {
-        return current;
-      }
-
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
-
-      const nextInputState = applyBackspaceToState(inputState);
-
-      return {
-        ...current,
-        value: nextInputState.value,
-        cursorPosition: nextInputState.cursorPosition,
-        ...(isDateInput(nextInputState)
-          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
-          : {})
-      };
-    });
+    applyInputOperation(applyBackspaceToState);
   };
 
   const deleteCharForward = () => {
-    setCommandBarState((current) => {
-      if (current.mode !== 'input') {
-        return current;
-      }
-
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
-
-      const nextInputState = applyDeleteCharForwardToState(inputState);
-
-      return {
-        ...current,
-        value: nextInputState.value,
-        ...(isDateInput(nextInputState)
-          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
-          : {})
-      };
-    });
+    applyInputOperation(applyDeleteCharForwardToState);
   };
 
   const moveCursorLeft = () => {
-    setCommandBarState((current) => {
-      if (current.mode !== 'input') {
-        return current;
-      }
-
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
-
-      const nextInputState = moveCursorLeftByOne(inputState);
-
-      return {
-        ...current,
-        cursorPosition: nextInputState.cursorPosition
-      };
-    });
+    applyInputOperation(moveCursorLeftByOne);
   };
 
   const moveCursorRight = () => {
-    setCommandBarState((current) => {
-      if (current.mode !== 'input') {
-        return current;
-      }
-
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
-
-      const nextInputState = moveCursorRightByOne(inputState);
-
-      return {
-        ...current,
-        cursorPosition: nextInputState.cursorPosition
-      };
-    });
+    applyInputOperation(moveCursorRightByOne);
   };
 
   const moveCursorToStart = () => {
-    setCommandBarState((current) => {
-      if (current.mode !== 'input') {
-        return current;
-      }
-
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
-
-      const nextInputState = moveCursorToStartOfLine(inputState);
-
-      return {
-        ...current,
-        cursorPosition: nextInputState.cursorPosition
-      };
-    });
+    applyInputOperation(moveCursorToStartOfLine);
   };
 
   const moveCursorToEnd = () => {
-    setCommandBarState((current) => {
-      if (current.mode !== 'input') {
-        return current;
-      }
-
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
-
-      const nextInputState = moveCursorToEndOfLine(inputState);
-
-      return {
-        ...current,
-        cursorPosition: nextInputState.cursorPosition
-      };
-    });
+    applyInputOperation(moveCursorToEndOfLine);
   };
 
   const moveCursorWordLeft = () => {
-    setCommandBarState((current) => {
-      if (current.mode !== 'input') {
-        return current;
-      }
-
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
-
-      const nextInputState = moveCursorWordLeftByOne(inputState);
-
-      return {
-        ...current,
-        cursorPosition: nextInputState.cursorPosition
-      };
-    });
+    applyInputOperation(moveCursorWordLeftByOne);
   };
 
   const moveCursorWordRight = () => {
-    setCommandBarState((current) => {
-      if (current.mode !== 'input') {
-        return current;
-      }
-
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
-
-      const nextInputState = moveCursorWordRightByOne(inputState);
-
-      return {
-        ...current,
-        cursorPosition: nextInputState.cursorPosition
-      };
-    });
+    applyInputOperation(moveCursorWordRightByOne);
   };
 
   const deleteWordBackward = () => {
-    setCommandBarState((current) => {
-      if (current.mode !== 'input') {
-        return current;
-      }
-
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
-
-      const nextInputState = deleteWordBackwardFromCursor(inputState);
-
-      return {
-        ...current,
-        value: nextInputState.value,
-        cursorPosition: nextInputState.cursorPosition,
-        ...(isDateInput(nextInputState)
-          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
-          : {})
-      };
-    });
+    applyInputOperation(deleteWordBackwardFromCursor);
   };
 
   const deleteToLineStart = () => {
-    setCommandBarState((current) => {
-      if (current.mode !== 'input') {
-        return current;
-      }
-
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
-
-      const nextInputState = deleteToLineStartFromCursor(inputState);
-
-      return {
-        ...current,
-        value: nextInputState.value,
-        cursorPosition: nextInputState.cursorPosition,
-        ...(isDateInput(nextInputState)
-          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
-          : {})
-      };
-    });
+    applyInputOperation(deleteToLineStartFromCursor);
   };
 
   const deleteToLineEnd = () => {
-    setCommandBarState((current) => {
-      if (current.mode !== 'input') {
-        return current;
-      }
-
-      const inputState = isDateInput(current)
-        ? current
-        : {
-            kind: current.kind,
-            value: current.value,
-            cursorPosition: current.cursorPosition,
-            ...(current.addPriority !== undefined ? { addPriority: current.addPriority } : {})
-          };
-
-      const nextInputState = deleteToLineEndFromCursor(inputState);
-
-      return {
-        ...current,
-        value: nextInputState.value,
-        cursorPosition: nextInputState.cursorPosition,
-        ...(isDateInput(nextInputState)
-          ? { creationDate: nextInputState.creationDate, completionDate: nextInputState.completionDate }
-          : {})
-      };
-    });
+    applyInputOperation(deleteToLineEndFromCursor);
   };
 
   const tab = () => {
