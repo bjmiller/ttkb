@@ -1,4 +1,5 @@
 import { PRIORITY_TAG_KEY, type TodoItem } from '../parser/types';
+import { extractTags } from '../parser/tags';
 
 type DateChanges = {
   creationDate: string | undefined;
@@ -32,57 +33,6 @@ const hasStatusDoing = (item: TodoItem): boolean => {
 
 const STATUS_DOING_TOKEN = 'status:doing';
 const PRIORITY_TAG_TOKEN_PATTERN = /^pri:[A-Z]$/;
-const PROJECT_TAG_PATTERN = /^\+([^\s+]+)$/;
-const CONTEXT_TAG_PATTERN = /^@([^\s@]+)$/;
-const METADATA_TAG_PATTERN = /^([A-Za-z][\w-]*):(\S+)$/;
-
-type ExtractedTags = {
-  description: string;
-  projects: string[];
-  contexts: string[];
-  metadata: TodoItem['metadata'];
-};
-
-const extractTags = (raw: string): ExtractedTags => {
-  const tokens = raw.trim().split(/\s+/);
-  const projects: string[] = [];
-  const contexts: string[] = [];
-  const metadata: TodoItem['metadata'] = [];
-  const words: string[] = [];
-
-  for (const token of tokens) {
-    const projectMatch = token.match(PROJECT_TAG_PATTERN);
-    if (projectMatch) {
-      const [, project] = projectMatch;
-      if (project != null) {
-        projects.push(project);
-      }
-      continue;
-    }
-
-    const contextMatch = token.match(CONTEXT_TAG_PATTERN);
-    if (contextMatch) {
-      const [, context] = contextMatch;
-      if (context != null) {
-        contexts.push(context);
-      }
-      continue;
-    }
-
-    const metadataMatch = token.match(METADATA_TAG_PATTERN);
-    if (metadataMatch) {
-      const [, key, value] = metadataMatch;
-      if (key != null && value != null) {
-        metadata.push({ key, value });
-        continue;
-      }
-    }
-
-    words.push(token);
-  }
-
-  return { description: words.join(' '), projects, contexts, metadata };
-};
 
 const withoutStatusDoingInDescription = (description: string): string => {
   const cleaned = description

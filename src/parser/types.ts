@@ -39,3 +39,10 @@ export type ParsedTodoFile = {
   items: TodoItem[];
   errors: UnparseableTodoItem[];
 };
+
+export type ExtractedTags = {
+  description: string;
+  projects: string[];
+  contexts: string[];
+  metadata: TodoItem['metadata'];
+};

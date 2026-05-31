@@ -8,11 +8,9 @@ import {
   TodoItemSchema,
   type UnparseableTodoItem
 } from './types';
+import { extractTags } from './tags';
 
 const priorityTokenPattern = /^\(([A-Z])\)$/;
-const projectTagPattern = /^\+([^\s+]+)$/;
-const contextTagPattern = /^@([^\s@]+)$/;
-const metadataTagPattern = /^([A-Za-z][\w-]*):(\S+)$/;
 
 const makeError = (raw: string, lineNumber: number, error: string): UnparseableTodoItem => ({
   kind: 'unparseable',
@@ -78,49 +76,20 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
     return makeError(raw, lineNumber, 'Task description is missing');
   }
 
-  const descriptionWords: string[] = [];
-  const projects: string[] = [];
-  const contexts: string[] = [];
-  const metadata: TodoItem['metadata'] = [];
+  const extracted = extractTags(descriptionTokens.join(' '));
+  const { description: joinedDescription, projects, contexts, metadata } = extracted;
 
-  for (const token of descriptionTokens) {
-    const projectMatch = token.match(projectTagPattern);
-    if (projectMatch) {
-      const [, project] = projectMatch;
-      if (project != null) {
-        projects.push(project);
-      }
-      continue;
-    }
-
-    const contextMatch = token.match(contextTagPattern);
-    if (contextMatch) {
-      const [, context] = contextMatch;
-      if (context != null) {
-        contexts.push(context);
-      }
-      continue;
-    }
-
-    const metadataMatch = token.match(metadataTagPattern);
-    if (metadataMatch) {
-      const [, key, value] = metadataMatch;
-      if (key != null && value != null) {
-        if (priTagPriority == null && key === PRIORITY_TAG_KEY && PRIORITY_PATTERN.test(value)) {
-          priTagPriority = value;
-        }
-
-        metadata.push({ key, value });
-        continue;
-      }
-    }
-
-    descriptionWords.push(token);
-  }
-
-  if (descriptionWords.length === 0) {
+  if (joinedDescription.length === 0) {
     return makeError(raw, lineNumber, 'Task description is missing');
   }
+
+  const priTagIndex = metadata.findIndex((tag) => tag.key === PRIORITY_TAG_KEY && PRIORITY_PATTERN.test(tag.value));
+  const priTag = priTagIndex >= 0 ? metadata[priTagIndex] : undefined;
+  if (priTag != null && priTagPriority == null) {
+    priTagPriority = priTag.value;
+  }
+
+  const descriptionWords = joinedDescription.split(/\s+/);
 
   const item: TodoItem = {
     kind: 'todo',
