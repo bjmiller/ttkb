@@ -70,6 +70,37 @@ export const useTaskActions = ({
     return viewMode === 'table' ? tableRows[tableSelectedIndex]?.task : selectionSelectedItem;
   };
 
+  const withSelected = <T>(callback: (selected: DisplayTask & { kind: 'todo' }) => T): T | undefined => {
+    const selected = getActiveSelected();
+    if (selected?.kind !== 'todo') {
+      commandBar.setStatusText('No selectable task');
+      return undefined;
+    }
+
+    return callback(selected);
+  };
+
+  const mutateSelectedTask = (
+    mutate: (item: TodoItem) => TodoItem,
+    statusText: string,
+    { preserve = false }: { preserve?: boolean } = {}
+  ) => {
+    withSelected((selected) => {
+      if (preserve) {
+        preserveSelection(selected.item.lineNumber);
+      }
+
+      void mutateTodos((todoItems, parseErrors) => {
+        const nextTodoItems = todoItems.map((todoItem) =>
+          todoItem.lineNumber === selected.item.lineNumber ? mutate(todoItem) : todoItem
+        );
+
+        commandBar.setStatusText(statusText);
+        return [...nextTodoItems, ...parseErrors].toSorted(byLineNumber);
+      });
+    });
+  };
+
   const applySubmit = () => {
     const action = commandBar.submit();
     if (action.type === 'quit') {
@@ -77,59 +108,18 @@ export const useTaskActions = ({
       return;
     }
 
-    const activeSelected = getActiveSelected();
-
     if (action.type === 'change-priority') {
-      const selected = activeSelected;
-      if (selected?.kind !== 'todo') {
-        commandBar.setStatusText('No selectable task');
-        return;
-      }
-
-      void mutateTodos((todoItems, parseErrors) => {
-        const nextTodoItems = todoItems.map((todoItem) =>
-          todoItem.lineNumber === selected.item.lineNumber ? changePriority(todoItem, action.priority) : todoItem
-        );
-
-        commandBar.setStatusText('Priority updated');
-        return [...nextTodoItems, ...parseErrors].toSorted(byLineNumber);
-      });
+      mutateSelectedTask((item) => changePriority(item, action.priority), 'Priority updated');
       return;
     }
 
     if (action.type === 'change-description') {
-      const selected = activeSelected;
-      if (selected?.kind !== 'todo') {
-        commandBar.setStatusText('No selectable task');
-        return;
-      }
-
-      void mutateTodos((todoItems, parseErrors) => {
-        const nextTodoItems = todoItems.map((todoItem) =>
-          todoItem.lineNumber === selected.item.lineNumber ? changeDescription(todoItem, action.description) : todoItem
-        );
-
-        commandBar.setStatusText('Description updated');
-        return [...nextTodoItems, ...parseErrors].toSorted(byLineNumber);
-      });
+      mutateSelectedTask((item) => changeDescription(item, action.description), 'Description updated');
       return;
     }
 
     if (action.type === 'change-dates') {
-      const selected = activeSelected;
-      if (selected?.kind !== 'todo') {
-        commandBar.setStatusText('No selectable task');
-        return;
-      }
-
-      void mutateTodos((todoItems, parseErrors) => {
-        const nextTodoItems = todoItems.map((todoItem) =>
-          todoItem.lineNumber === selected.item.lineNumber ? changeDates(todoItem, action) : todoItem
-        );
-
-        commandBar.setStatusText('Date updated');
-        return [...nextTodoItems, ...parseErrors].toSorted(byLineNumber);
-      });
+      mutateSelectedTask((item) => changeDates(item, action), 'Date updated');
       return;
     }
 
@@ -154,45 +144,17 @@ export const useTaskActions = ({
   };
 
   const toggleSelected = () => {
-    const selected = getActiveSelected();
-    if (selected?.kind !== 'todo') {
-      commandBar.setStatusText('No selectable task');
-      return;
-    }
-
-    preserveSelection(selected.item.lineNumber);
-
-    void mutateTodos((todoItems, parseErrors) => {
-      const nextTodoItems = todoItems.map((todoItem) =>
-        todoItem.lineNumber === selected.item.lineNumber ? toggleCompletion(todoItem) : todoItem
-      );
-
-      commandBar.setStatusText('Toggled completion');
-      return [...nextTodoItems, ...parseErrors].toSorted(byLineNumber);
-    });
+    mutateSelectedTask(toggleCompletion, 'Toggled completion', { preserve: true });
   };
 
   const toggleSelectedDoing = () => {
-    const selected = getActiveSelected();
-    if (selected?.kind !== 'todo') {
-      commandBar.setStatusText('No selectable task');
-      return;
-    }
+    withSelected((selected) => {
+      if (selected.item.completed) {
+        commandBar.setStatusText('Only backlog/doing tasks can be toggled');
+        return;
+      }
 
-    if (selected.item.completed) {
-      commandBar.setStatusText('Only backlog/doing tasks can be toggled');
-      return;
-    }
-
-    preserveSelection(selected.item.lineNumber);
-
-    void mutateTodos((todoItems, parseErrors) => {
-      const nextTodoItems = todoItems.map((todoItem) =>
-        todoItem.lineNumber === selected.item.lineNumber ? toggleDoing(todoItem) : todoItem
-      );
-
-      commandBar.setStatusText('Toggled doing status');
-      return [...nextTodoItems, ...parseErrors].toSorted(byLineNumber);
+      mutateSelectedTask(toggleDoing, 'Toggled doing status', { preserve: true });
     });
   };
 
@@ -212,7 +174,7 @@ export const useTaskActions = ({
 
   const openDeleteConfirm = () => {
     const selected = getActiveSelected();
-    if (!selected) {
+    if (selected == null) {
       commandBar.setStatusText('No selectable task');
       return;
     }
@@ -297,26 +259,18 @@ export const useTaskActions = ({
   };
 
   const beginEditSelectedDescription = () => {
-    const selected = getActiveSelected();
-    if (selected?.kind !== 'todo') {
-      commandBar.setStatusText('No selectable task');
-      return;
-    }
-
-    commandBar.openEditDescription(extractBodyFromRaw(selected.item));
+    withSelected((selected) => {
+      commandBar.openEditDescription(extractBodyFromRaw(selected.item));
+    });
   };
 
   const beginEditSelectedDates = () => {
-    const selected = getActiveSelected();
-    if (selected?.kind !== 'todo') {
-      commandBar.setStatusText('No selectable task');
-      return;
-    }
-
-    commandBar.openEditDates({
-      completed: selected.item.completed,
-      ...(selected.item.creationDate != null ? { creationDate: selected.item.creationDate } : {}),
-      ...(selected.item.completionDate != null ? { completionDate: selected.item.completionDate } : {})
+    withSelected((selected) => {
+      commandBar.openEditDates({
+        completed: selected.item.completed,
+        ...(selected.item.creationDate != null ? { creationDate: selected.item.creationDate } : {}),
+        ...(selected.item.completionDate != null ? { completionDate: selected.item.completionDate } : {})
+      });
     });
   };
 
