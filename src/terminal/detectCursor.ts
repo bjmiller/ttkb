@@ -3,7 +3,7 @@ import type { CursorShape } from '../config/types';
 
 const CURSOR_QUERY = '\u001bP$q q\u001b\\';
 const RESPONSE_PATTERN = /\u001bP1\$r(\d+) q(?:\u001b\\|\u0007)/;
-const PROBE_TIMEOUT_MS = 120;
+const PROBE_TIMEOUT_MS = 50;
 const STEADY_BLOCK_CODE = 2;
 const BLINKING_UNDERLINE_CODE = 3;
 const STEADY_UNDERLINE_CODE = 4;

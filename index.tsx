@@ -27,12 +27,11 @@ const resolveCursorStyle = (
 });
 
 const main = async () => {
-  const config = await loadConfig();
+  const [config, detectedCursor] = await Promise.all([loadConfig(), detectTerminalCursor()]);
 
   const explicitCursorShape = config.cursorStyle && config.cursorStyle !== 'native' ? config.cursorStyle : undefined;
   const explicitCursorBlink = config.cursorBlink;
 
-  const detectedCursor = explicitCursorShape ? undefined : await detectTerminalCursor();
   const resolvedCursorStyle = resolveCursorStyle(explicitCursorShape, explicitCursorBlink, detectedCursor);
 
   enterAlternateScreen();
