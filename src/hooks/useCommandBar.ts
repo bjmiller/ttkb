@@ -274,6 +274,104 @@ export const useCommandBar = () => {
     });
   };
 
+  const submitFilter = (state: InputMode): SubmitAction => {
+    const trimmedFilter = state.value.trim();
+    const nextFilter = trimmedFilter.length === 0 ? undefined : trimmedFilter;
+    setFilter(nextFilter);
+    setStatusText(nextFilter == null ? 'Filter cleared' : `Filter: ${nextFilter}`);
+    setCommandBarState({ mode: 'idle' });
+    return { type: 'set-filter', value: nextFilter };
+  };
+
+  const submitPriority = (state: InputMode): SubmitAction => {
+    const letter = state.value.trim().toUpperCase();
+    const priority = letter.length === 1 ? letter : undefined;
+    setCommandBarState({ mode: 'idle' });
+    return priority == null ? { type: 'change-priority' } : { type: 'change-priority', priority };
+  };
+
+  const submitAddPriority = (state: InputMode): SubmitAction => {
+    const letter = state.value.trim().toUpperCase();
+    const addPriority = letter.length === 1 ? letter : undefined;
+
+    setCommandBarState({
+      mode: 'input',
+      kind: 'add-description',
+      prompt: 'Task description: ',
+      value: '',
+      cursorPosition: 0,
+      ...(addPriority != null ? { addPriority } : {})
+    });
+    return { type: 'none' };
+  };
+
+  const submitAddDescription = (state: InputMode): SubmitAction => {
+    const description = state.value.trim();
+    if (description.length === 0) {
+      setStatusText('Description is required');
+      return { type: 'none' };
+    }
+
+    setCommandBarState({ mode: 'idle' });
+    const addPriority = 'addPriority' in state ? state.addPriority : undefined;
+    return addPriority != null ? { type: 'add', priority: addPriority, description } : { type: 'add', description };
+  };
+
+  const submitEditDescription = (state: InputMode): SubmitAction => {
+    const description = state.value.trim();
+    if (description.length === 0) {
+      setStatusText('Description is required');
+      return { type: 'none' };
+    }
+
+    setCommandBarState({ mode: 'idle' });
+    return { type: 'change-description', description };
+  };
+
+  const submitEditDate = (state: DateInputMode): SubmitAction => {
+    const value = state.value.trim();
+
+    const creationDate =
+      state.activeDateField === 'creation' ? (value.length === 0 ? undefined : value) : state.creationDate;
+    const completionDate =
+      state.activeDateField === 'completion' ? (value.length === 0 ? undefined : value) : state.completionDate;
+
+    if (creationDate != null && !DATE_PATTERN.test(creationDate)) {
+      setCommandBarState({
+        ...state,
+        prompt: datePromptWithError(state.activeDateField, state.completed, 'Invalid created date.')
+      });
+      setStatusText('Created date must be YYYY-MM-DD');
+      return { type: 'none' };
+    }
+
+    if (state.completed) {
+      if (completionDate == null) {
+        setCommandBarState({
+          ...state,
+          prompt: datePromptWithError(state.activeDateField, state.completed, 'Completed date is required.')
+        });
+        setStatusText('Completed date is required for done tasks');
+        return { type: 'none' };
+      }
+
+      if (!DATE_PATTERN.test(completionDate)) {
+        setCommandBarState({
+          ...state,
+          prompt: datePromptWithError(state.activeDateField, state.completed, 'Invalid completed date.')
+        });
+        setStatusText('Completed date must be YYYY-MM-DD');
+        return { type: 'none' };
+      }
+
+      setCommandBarState({ mode: 'idle' });
+      return { type: 'change-dates', creationDate, completionDate };
+    }
+
+    setCommandBarState({ mode: 'idle' });
+    return { type: 'change-dates', creationDate };
+  };
+
   const submit = (): SubmitAction => {
     if (commandBarState.mode === 'confirm') {
       return { type: 'quit' };
@@ -283,126 +381,22 @@ export const useCommandBar = () => {
       return { type: 'none' };
     }
 
-    if (commandBarState.kind === 'filter') {
-      const trimmedFilter = commandBarState.value.trim();
-      const nextFilter = trimmedFilter.length === 0 ? undefined : trimmedFilter;
-      setFilter(nextFilter);
-      setStatusText(nextFilter == null ? 'Filter cleared' : `Filter: ${nextFilter}`);
-      setCommandBarState({ mode: 'idle' });
-      return { type: 'set-filter', value: nextFilter };
-    }
-
-    if (commandBarState.kind === 'priority') {
-      const letter = commandBarState.value.trim().toUpperCase();
-      const priority = letter.length === 1 ? letter : undefined;
-      setCommandBarState({ mode: 'idle' });
-      return priority == null ? { type: 'change-priority' } : { type: 'change-priority', priority };
-    }
-
-    if (commandBarState.kind === 'add-priority') {
-      const letter = commandBarState.value.trim().toUpperCase();
-      const addPriority = letter.length === 1 ? letter : undefined;
-
-      setCommandBarState({
-        mode: 'input',
-        kind: 'add-description',
-        prompt: 'Task description: ',
-        value: '',
-        cursorPosition: 0,
-        ...(addPriority != null ? { addPriority } : {})
-      });
-      return { type: 'none' };
-    }
-
-    if (commandBarState.kind === 'add-description') {
-      const description = commandBarState.value.trim();
-      if (description.length === 0) {
-        setStatusText('Description is required');
+    switch (commandBarState.kind) {
+      case 'filter':
+        return submitFilter(commandBarState);
+      case 'priority':
+        return submitPriority(commandBarState);
+      case 'add-priority':
+        return submitAddPriority(commandBarState);
+      case 'add-description':
+        return submitAddDescription(commandBarState);
+      case 'edit-description':
+        return submitEditDescription(commandBarState);
+      case 'edit-date':
+        return submitEditDate(commandBarState);
+      default:
         return { type: 'none' };
-      }
-
-      setCommandBarState({ mode: 'idle' });
-      return commandBarState.addPriority != null
-        ? { type: 'add', priority: commandBarState.addPriority, description }
-        : { type: 'add', description };
     }
-
-    if (commandBarState.kind === 'edit-description') {
-      const description = commandBarState.value.trim();
-      if (description.length === 0) {
-        setStatusText('Description is required');
-        return { type: 'none' };
-      }
-
-      setCommandBarState({ mode: 'idle' });
-      return { type: 'change-description', description };
-    }
-
-    if (commandBarState.kind === 'edit-date') {
-      const value = commandBarState.value.trim();
-
-      const creationDate =
-        commandBarState.activeDateField === 'creation'
-          ? value.length === 0
-            ? undefined
-            : value
-          : commandBarState.creationDate;
-      const completionDate =
-        commandBarState.activeDateField === 'completion'
-          ? value.length === 0
-            ? undefined
-            : value
-          : commandBarState.completionDate;
-
-      if (creationDate != null && !DATE_PATTERN.test(creationDate)) {
-        setCommandBarState({
-          ...commandBarState,
-          prompt: datePromptWithError(
-            commandBarState.activeDateField,
-            commandBarState.completed,
-            'Invalid created date.'
-          )
-        });
-        setStatusText('Created date must be YYYY-MM-DD');
-        return { type: 'none' };
-      }
-
-      if (commandBarState.completed) {
-        if (completionDate == null) {
-          setCommandBarState({
-            ...commandBarState,
-            prompt: datePromptWithError(
-              commandBarState.activeDateField,
-              commandBarState.completed,
-              'Completed date is required.'
-            )
-          });
-          setStatusText('Completed date is required for done tasks');
-          return { type: 'none' };
-        }
-
-        if (!DATE_PATTERN.test(completionDate)) {
-          setCommandBarState({
-            ...commandBarState,
-            prompt: datePromptWithError(
-              commandBarState.activeDateField,
-              commandBarState.completed,
-              'Invalid completed date.'
-            )
-          });
-          setStatusText('Completed date must be YYYY-MM-DD');
-          return { type: 'none' };
-        }
-
-        setCommandBarState({ mode: 'idle' });
-        return { type: 'change-dates', creationDate, completionDate };
-      }
-
-      setCommandBarState({ mode: 'idle' });
-      return { type: 'change-dates', creationDate };
-    }
-
-    return { type: 'none' };
   };
 
   return {
