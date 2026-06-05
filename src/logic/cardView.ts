@@ -1,5 +1,6 @@
 import type { DisplayTask } from './columns';
 import { formatContexts, formatDoneCallout, formatMeta, formatPrimaryLine, formatProjects } from './taskFormatting';
+import { getMetaBanner } from './metadataColors';
 
 const TASK_CARD_BORDER_ROWS = 2;
 const UNPARSEABLE_CARD_MARGIN_BOTTOM_ROWS = 1;
@@ -47,6 +48,11 @@ export const getCardHeight = (task: DisplayTask, contentWidth: number): number =
 
   if (task.item.metadata.length > 0) {
     contentRows += getWrappedRowCount(`meta: ${formatMeta(task.item.metadata)}`, contentWidth);
+  }
+
+  const banner = getMetaBanner(task.item.metadata);
+  if (banner != null) {
+    contentRows += getWrappedRowCount(banner.text, contentWidth);
   }
 
   return contentRows + TASK_CARD_BORDER_ROWS;

@@ -18,6 +18,7 @@ import {
   type TodoItem,
   type UnparseableTodoItem
 } from '../parser/types';
+import { METADATA_TAG_PATTERN } from '../parser/tags';
 import { byLineNumber } from '../logic/ordering';
 import { type ViewMode } from '../types';
 
@@ -257,7 +258,31 @@ export const useTaskActions = ({
       skip += 1;
     }
 
-    return tokens.slice(skip).join(' ');
+    const bodyTokens = tokens.slice(skip);
+    const currentMetaMap = new Map(item.metadata.map((tag) => [tag.key, tag.value]));
+    const usedMetaKeys = new Set<string>();
+
+    const resultTokens: string[] = [];
+    for (const token of bodyTokens) {
+      const metaMatch = token.match(METADATA_TAG_PATTERN);
+      if (metaMatch) {
+        const [, key] = metaMatch;
+        if (key != null && currentMetaMap.has(key)) {
+          resultTokens.push(`${key}:${currentMetaMap.get(key)}`);
+          usedMetaKeys.add(key);
+        }
+      } else {
+        resultTokens.push(token);
+      }
+    }
+
+    for (const tag of item.metadata) {
+      if (!usedMetaKeys.has(tag.key)) {
+        resultTokens.push(`${tag.key}:${tag.value}`);
+      }
+    }
+
+    return resultTokens.join(' ');
   };
 
   const beginEditSelectedDescription = () => {

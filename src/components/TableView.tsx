@@ -10,6 +10,7 @@ import {
   formatPrimaryLine,
   formatProjects
 } from '../logic/taskFormatting';
+import { renderColoredMeta, getMetaBanner } from '../logic/metadataColors';
 
 type TableViewProps = {
   rows: TableRow[];
@@ -195,12 +196,29 @@ const renderRowText = (row: TableRow, widths: TableColumnWidths): React.ReactNod
   const created = formatCell(values.created, DATE_WIDTH);
   const project = formatCell(values.project, widths.project);
   const context = formatCell(values.context, widths.context);
-  const meta = formatCell(values.meta, widths.meta);
+
+  const metadata = row.task.kind === 'todo' ? row.task.item.metadata : [];
+  const hasMeta = metadata.length > 0;
+  const metaPadding = hasMeta
+    ? ' '.repeat(Math.max(0, widths.meta - values.meta.length))
+    : formatCell(values.meta, widths.meta);
+
+  const banner = row.task.kind === 'todo' ? getMetaBanner(row.task.item.metadata) : null;
+  const description = banner != null ? `${values.description} ${banner.text}` : values.description;
 
   return (
     <>
       {rowNumber} │ {status} │ {priority} │ {created} │ <Text color="blueBright">{project}</Text> │{' '}
-      <Text color="magenta">{context}</Text> │ <Text color="yellow">{meta}</Text> │ {values.description}
+      <Text color="magenta">{context}</Text> │{' '}
+      {hasMeta ? (
+        <>
+          {renderColoredMeta(metadata)}
+          {metaPadding}
+        </>
+      ) : (
+        <>{metaPadding}</>
+      )}{' '}
+      │ {banner != null ? <Text color={banner.color}>{description}</Text> : description}
     </>
   );
 };

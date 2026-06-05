@@ -90,7 +90,7 @@ describe('addTask', () => {
     expect(created.priority).toBe('B');
     expect(created.description).toBe('New task');
     expect(created.creationDate).toBeDefined();
-    expect(created.dirty).toBe(true);
+    expect(created.dirty).toBe(false);
   });
 
   it('extracts projects and contexts from description', () => {
@@ -103,7 +103,7 @@ describe('addTask', () => {
     expect(created.projects).toEqual(['project']);
     expect(created.contexts).toEqual(['context']);
     expect(created.metadata).toEqual([{ key: 'due', value: 'tomorrow' }]);
-    expect(created.dirty).toBe(true);
+    expect(created.dirty).toBe(false);
   });
 });
 
@@ -163,7 +163,7 @@ describe('changeDescription', () => {
     expect(changed.priority).toBe('B');
     expect(changed.creationDate).toBe('2026-01-01');
     expect(changed.completionDate).toBe('2026-01-03');
-    expect(changed.dirty).toBe(true);
+    expect(changed.dirty).toBe(false);
   });
 
   it('extracts projects and contexts from new description', () => {
@@ -173,7 +173,7 @@ describe('changeDescription', () => {
     expect(changed.description).toBe('Updated task');
     expect(changed.projects).toEqual(['project']);
     expect(changed.contexts).toEqual(['context']);
-    expect(changed.dirty).toBe(true);
+    expect(changed.dirty).toBe(false);
   });
 });
 

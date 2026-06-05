@@ -1,6 +1,6 @@
 import type { ParsedTodoLine, TodoItem } from './types';
 
-const serializeTodoItem = (item: TodoItem): string => {
+export const serializeTodoItem = (item: TodoItem): string => {
   if (!item.dirty) {
     return item.raw;
   }

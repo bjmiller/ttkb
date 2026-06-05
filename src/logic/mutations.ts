@@ -1,4 +1,4 @@
-import { PRIORITY_TAG_KEY, type TodoItem } from '../parser/types';
+import { PRIORITY_TAG_KEY, PRIORITY_TOKEN_PATTERN, DATE_PATTERN, type TodoItem } from '../parser/types';
 import { extractTags } from '../parser/tags';
 
 type DateChanges = {
@@ -33,6 +33,34 @@ const hasStatusDoing = (item: TodoItem): boolean => {
 
 const STATUS_DOING_TOKEN = 'status:doing';
 const PRIORITY_TAG_TOKEN_PATTERN = /^pri:[A-Z]$/;
+
+const extractPrefix = (raw: string, completed: boolean): string => {
+  const tokens = raw.trim().split(/\s+/);
+  let skip = 0;
+
+  if (tokens[skip] === 'x') {
+    skip += 1;
+  }
+
+  if (!completed) {
+    const token = tokens[skip];
+    if (token != null && PRIORITY_TOKEN_PATTERN.test(token)) {
+      skip += 1;
+    }
+  }
+
+  const dateToken1 = tokens[skip];
+  if (completed && dateToken1 != null && DATE_PATTERN.test(dateToken1)) {
+    skip += 1;
+  }
+
+  const dateToken2 = tokens[skip];
+  if (dateToken2 != null && DATE_PATTERN.test(dateToken2)) {
+    skip += 1;
+  }
+
+  return tokens.slice(0, skip).join(' ');
+};
 
 const withoutStatusDoingInDescription = (description: string): string => {
   const cleaned = description
@@ -77,12 +105,14 @@ export const toggleCompletion = (item: TodoItem): TodoItem => {
 
 export const addTask = (params: { lineNumber: number; description: string; priority?: string }): TodoItem => {
   const { description, projects, contexts, metadata } = extractTags(params.description);
+  const creationDate = today();
+
   const base: TodoItem = {
     kind: 'todo',
     lineNumber: params.lineNumber,
     raw: '',
     completed: false,
-    creationDate: today(),
+    creationDate,
     description,
     projects,
     contexts,
@@ -90,7 +120,19 @@ export const addTask = (params: { lineNumber: number; description: string; prior
     dirty: true
   };
 
-  return params.priority == null || params.priority.length === 0 ? base : { ...base, priority: params.priority };
+  const item = params.priority == null || params.priority.length === 0 ? base : { ...base, priority: params.priority };
+
+  const segments: string[] = [];
+  if (params.priority != null && params.priority.length > 0) {
+    segments.push(`(${params.priority})`);
+  }
+  segments.push(creationDate);
+  const trimmedInput = params.description.trim();
+  if (trimmedInput.length > 0) {
+    segments.push(trimmedInput);
+  }
+
+  return { ...item, raw: segments.join(' '), dirty: false };
 };
 
 export const changePriority = (item: TodoItem, priority: string | undefined): TodoItem => {
@@ -122,13 +164,19 @@ export const changePriority = (item: TodoItem, priority: string | undefined): To
 
 export const changeDescription = (item: TodoItem, description: string): TodoItem => {
   const { description: cleanDescription, projects, contexts, metadata } = extractTags(description);
+
+  const prefix = extractPrefix(item.raw, item.completed);
+  const trimmedBody = description.trim();
+  const raw = prefix.length > 0 ? `${prefix} ${trimmedBody}` : trimmedBody;
+
   return {
     ...item,
     description: cleanDescription,
     projects,
     contexts,
     metadata,
-    dirty: true
+    raw,
+    dirty: false
   };
 };
 
