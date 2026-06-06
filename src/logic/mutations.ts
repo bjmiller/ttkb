@@ -1,5 +1,5 @@
 import { PRIORITY_TAG_KEY, PRIORITY_TOKEN_PATTERN, DATE_PATTERN, type TodoItem } from '../parser/types';
-import { extractTags } from '../parser/tags';
+import { extractTags, METADATA_TAG_PATTERN } from '../parser/tags';
 
 type DateChanges = {
   creationDate: string | undefined;
@@ -82,25 +82,75 @@ const withoutPriorityTagInDescription = (description: string): string => {
   return cleaned;
 };
 
+const buildPrefix = (item: TodoItem): string => {
+  const segments: string[] = [];
+  if (item.completed) {
+    segments.push('x');
+  }
+  if (item.priority != null && !item.completed) {
+    segments.push(`(${item.priority})`);
+  }
+  if (item.completed && item.completionDate != null) {
+    segments.push(item.completionDate);
+  }
+  if (item.creationDate != null) {
+    segments.push(item.creationDate);
+  }
+  return segments.join(' ');
+};
+
+const buildRaw = (oldRaw: string, oldCompleted: boolean, newItem: TodoItem): string => {
+  const oldPrefix = extractPrefix(oldRaw, oldCompleted);
+  const body = oldRaw.trim().slice(oldPrefix.length).trim();
+  const bodyTokens = body.length > 0 ? body.split(/\s+/) : [];
+
+  const newMetaMap = new Map(newItem.metadata.map((tag) => [tag.key, tag.value]));
+  const usedMetaKeys = new Set<string>();
+
+  const resultTokens: string[] = [];
+  for (const token of bodyTokens) {
+    const metaMatch = token.match(METADATA_TAG_PATTERN);
+    if (metaMatch != null) {
+      const key = metaMatch[1];
+      if (key != null && newMetaMap.has(key)) {
+        resultTokens.push(`${key}:${newMetaMap.get(key)}`);
+        usedMetaKeys.add(key);
+      }
+    } else {
+      resultTokens.push(token);
+    }
+  }
+
+  for (const tag of newItem.metadata) {
+    if (!usedMetaKeys.has(tag.key)) {
+      resultTokens.push(`${tag.key}:${tag.value}`);
+    }
+  }
+
+  const newPrefix = buildPrefix(newItem);
+  const newBody = resultTokens.join(' ');
+  return newPrefix.length > 0 ? `${newPrefix} ${newBody}` : newBody;
+};
+
 export const toggleCompletion = (item: TodoItem): TodoItem => {
   if (item.completed) {
     const { completionDate: _completionDate, ...withoutCompletionDate } = item;
-    return {
+    const newItem: TodoItem = {
       ...withoutCompletionDate,
       description: withoutPriorityTagInDescription(item.description),
       metadata: withoutPriorityTag(item.metadata),
-      completed: false,
-      dirty: true
+      completed: false
     };
+    return { ...newItem, raw: buildRaw(item.raw, item.completed, newItem) };
   }
 
-  return {
+  const newItem: TodoItem = {
     ...item,
     completed: true,
     completionDate: today(),
-    metadata: withPriorityTag(withoutStatusDoing(item), item.priority),
-    dirty: true
+    metadata: withPriorityTag(withoutStatusDoing(item), item.priority)
   };
+  return { ...newItem, raw: buildRaw(item.raw, item.completed, newItem) };
 };
 
 export const addTask = (params: { lineNumber: number; description: string; priority?: string }): TodoItem => {
@@ -116,8 +166,7 @@ export const addTask = (params: { lineNumber: number; description: string; prior
     description,
     projects,
     contexts,
-    metadata,
-    dirty: true
+    metadata
   };
 
   const item = params.priority == null || params.priority.length === 0 ? base : { ...base, priority: params.priority };
@@ -132,34 +181,34 @@ export const addTask = (params: { lineNumber: number; description: string; prior
     segments.push(trimmedInput);
   }
 
-  return { ...item, raw: segments.join(' '), dirty: false };
+  return { ...item, raw: segments.join(' ') };
 };
 
 export const changePriority = (item: TodoItem, priority: string | undefined): TodoItem => {
   if (priority == null || priority.length === 0) {
     const { priority: _priority, ...withoutPriority } = item;
-    return {
+    const newItem: TodoItem = {
       ...withoutPriority,
-      metadata: withoutPriorityTag(item.metadata),
-      dirty: true
+      metadata: withoutPriorityTag(item.metadata)
     };
+    return { ...newItem, raw: buildRaw(item.raw, item.completed, newItem) };
   }
 
   if (item.completed) {
-    return {
+    const newItem: TodoItem = {
       ...item,
       priority,
-      metadata: withPriorityTag(item.metadata, priority),
-      dirty: true
+      metadata: withPriorityTag(item.metadata, priority)
     };
+    return { ...newItem, raw: buildRaw(item.raw, item.completed, newItem) };
   }
 
-  return {
+  const newItem: TodoItem = {
     ...item,
     priority,
-    metadata: withoutPriorityTag(item.metadata),
-    dirty: true
+    metadata: withoutPriorityTag(item.metadata)
   };
+  return { ...newItem, raw: buildRaw(item.raw, item.completed, newItem) };
 };
 
 export const changeDescription = (item: TodoItem, description: string): TodoItem => {
@@ -175,8 +224,7 @@ export const changeDescription = (item: TodoItem, description: string): TodoItem
     projects,
     contexts,
     metadata,
-    raw,
-    dirty: false
+    raw
   };
 };
 
@@ -184,38 +232,34 @@ export const changeDates = (item: TodoItem, changes: DateChanges): TodoItem => {
   let nextItem: TodoItem;
 
   if (changes.creationDate != null && changes.creationDate.length > 0) {
-    nextItem = { ...item, creationDate: changes.creationDate, dirty: true };
+    nextItem = { ...item, creationDate: changes.creationDate };
   } else {
     const { creationDate: _creationDate, ...withoutCreationDate } = item;
-    nextItem = { ...withoutCreationDate, dirty: true };
+    nextItem = { ...withoutCreationDate };
   }
 
   if (item.completed && changes.completionDate != null && changes.completionDate.length > 0) {
-    return {
-      ...nextItem,
-      completionDate: changes.completionDate,
-      dirty: true
-    };
+    nextItem = { ...nextItem, completionDate: changes.completionDate };
   }
 
-  return nextItem;
+  return { ...nextItem, raw: buildRaw(item.raw, item.completed, nextItem) };
 };
 
 export const toggleDoing = (item: TodoItem): TodoItem => {
   if (hasStatusDoing(item)) {
-    return {
+    const newItem: TodoItem = {
       ...item,
       description: withoutStatusDoingInDescription(item.description),
-      metadata: withoutStatusDoing(item),
-      dirty: true
+      metadata: withoutStatusDoing(item)
     };
+    return { ...newItem, raw: buildRaw(item.raw, item.completed, newItem) };
   }
 
-  return {
+  const newItem: TodoItem = {
     ...item,
-    metadata: [...withoutStatusDoing(item), { key: 'status', value: 'doing' }],
-    dirty: true
+    metadata: [...withoutStatusDoing(item), { key: 'status', value: 'doing' }]
   };
+  return { ...newItem, raw: buildRaw(item.raw, item.completed, newItem) };
 };
 
 export const partitionCompleted = (items: TodoItem[]): { active: TodoItem[]; completed: TodoItem[] } => {

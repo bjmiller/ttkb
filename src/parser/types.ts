@@ -22,8 +22,7 @@ export const TodoItemSchema = type({
   description: 'string',
   projects: 'string[]',
   contexts: 'string[]',
-  metadata: MetadataTagSchema.array(),
-  dirty: 'boolean'
+  metadata: MetadataTagSchema.array()
 });
 
 export const UnparseableTodoItemSchema = type({

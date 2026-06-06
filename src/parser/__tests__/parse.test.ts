@@ -103,14 +103,6 @@ describe('serializeTodoItems', () => {
       parseTodoLine('x 2026-02-13 2026-02-01 Done task pri:B', SECOND_SERIALIZED_LINE_NUMBER)
     ];
 
-    if (parsed[0]?.kind === 'todo') {
-      parsed[0].dirty = true;
-    }
-
-    if (parsed[1]?.kind === 'todo') {
-      parsed[1].dirty = true;
-    }
-
     const serialized = serializeTodoItems(parsed);
     expect(serialized).toBe('(A) 2026-02-13 Active task\nx 2026-02-13 2026-02-01 Done task pri:B');
   });

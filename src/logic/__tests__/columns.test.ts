@@ -16,7 +16,6 @@ const todo = (partial: Partial<TodoItem> & Pick<TodoItem, 'lineNumber' | 'raw' |
     projects: [],
     contexts: [],
     metadata: [],
-    dirty: false,
     ...overrides
   };
 };

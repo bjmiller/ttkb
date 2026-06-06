@@ -99,8 +99,7 @@ export const parseTodoLine = (raw: string, lineNumber: number): ParsedTodoLine =
     description: descriptionWords.join(' '),
     projects,
     contexts,
-    metadata,
-    dirty: false
+    metadata
   };
 
   const priority = completed ? priTagPriority : parenthesizedPriority;

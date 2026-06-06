@@ -23,7 +23,6 @@ const makeTodo = (partial: Partial<TodoItem> = {}): TodoItem => ({
   projects: [],
   contexts: [],
   metadata: [],
-  dirty: false,
   ...partial
 });
 
@@ -44,7 +43,6 @@ describe('toggleCompletion', () => {
       { key: 'owner', value: 'me' },
       { key: 'pri', value: 'B' }
     ]);
-    expect(toggled.dirty).toBe(true);
   });
 
   it('marks completed task as active', () => {
@@ -60,7 +58,6 @@ describe('toggleCompletion', () => {
     expect(toggled.completionDate).toBeUndefined();
     expect(toggled.description).toBe('Task');
     expect(toggled.metadata).toEqual([]);
-    expect(toggled.dirty).toBe(true);
   });
 
   it('preserves priority and round-trips between pri tag (done) and parentheses (active)', () => {
@@ -83,14 +80,13 @@ describe('toggleCompletion', () => {
 });
 
 describe('addTask', () => {
-  it('creates a new dirty task with trimmed description', () => {
+  it('creates a new task with trimmed description', () => {
     const created = addTask({ lineNumber: 5, description: '  New task  ', priority: 'B' });
 
     expect(created.lineNumber).toBe(5);
     expect(created.priority).toBe('B');
     expect(created.description).toBe('New task');
     expect(created.creationDate).toBeDefined();
-    expect(created.dirty).toBe(false);
   });
 
   it('extracts projects and contexts from description', () => {
@@ -103,15 +99,13 @@ describe('addTask', () => {
     expect(created.projects).toEqual(['project']);
     expect(created.contexts).toEqual(['context']);
     expect(created.metadata).toEqual([{ key: 'due', value: 'tomorrow' }]);
-    expect(created.dirty).toBe(false);
   });
 });
 
 describe('changePriority', () => {
-  it('sets provided priority and marks dirty', () => {
+  it('sets provided priority', () => {
     const changed = changePriority(makeTodo(), 'A');
     expect(changed.priority).toBe('A');
-    expect(changed.dirty).toBe(true);
   });
 
   it('updates pri metadata when changing completed task priority', () => {
@@ -130,7 +124,6 @@ describe('changePriority', () => {
       { key: 'owner', value: 'me' },
       { key: 'pri', value: 'A' }
     ]);
-    expect(changed.dirty).toBe(true);
   });
 
   it('clears priority when undefined', () => {
@@ -146,7 +139,6 @@ describe('changePriority', () => {
     );
     expect(changed.priority).toBeUndefined();
     expect(changed.metadata).toEqual([{ key: 'owner', value: 'me' }]);
-    expect(changed.dirty).toBe(true);
   });
 });
 
@@ -163,7 +155,6 @@ describe('changeDescription', () => {
     expect(changed.priority).toBe('B');
     expect(changed.creationDate).toBe('2026-01-01');
     expect(changed.completionDate).toBe('2026-01-03');
-    expect(changed.dirty).toBe(false);
   });
 
   it('extracts projects and contexts from new description', () => {
@@ -173,7 +164,6 @@ describe('changeDescription', () => {
     expect(changed.description).toBe('Updated task');
     expect(changed.projects).toEqual(['project']);
     expect(changed.contexts).toEqual(['context']);
-    expect(changed.dirty).toBe(false);
   });
 });
 
@@ -184,7 +174,6 @@ describe('changeDates', () => {
     const changed = changeDates(source, { creationDate: '2026-02-01' });
     expect(changed.creationDate).toBe('2026-02-01');
     expect(changed.completionDate).toBeUndefined();
-    expect(changed.dirty).toBe(true);
   });
 
   it('clears creation date when undefined is provided', () => {
@@ -192,7 +181,6 @@ describe('changeDates', () => {
 
     const changed = changeDates(source, { creationDate: undefined });
     expect(changed.creationDate).toBeUndefined();
-    expect(changed.dirty).toBe(true);
   });
 
   it('updates completion date for completed task', () => {
@@ -208,7 +196,6 @@ describe('changeDates', () => {
     });
     expect(changed.creationDate).toBe('2026-01-01');
     expect(changed.completionDate).toBe('2026-02-03');
-    expect(changed.dirty).toBe(true);
   });
 });
 
@@ -221,7 +208,6 @@ describe('toggleDoing', () => {
       { key: 'owner', value: 'me' },
       { key: 'status', value: 'doing' }
     ]);
-    expect(changed.dirty).toBe(true);
   });
 
   it('removes status:doing when task is in doing', () => {
@@ -236,7 +222,6 @@ describe('toggleDoing', () => {
     const changed = toggleDoing(source);
     expect(changed.description).toBe('Task');
     expect(changed.metadata).toEqual([{ key: 'owner', value: 'me' }]);
-    expect(changed.dirty).toBe(true);
   });
 });
 
