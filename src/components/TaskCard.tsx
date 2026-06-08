@@ -16,7 +16,7 @@ const TaskCardComponent = ({ item, selected }: TaskCardProps) => {
 
   const primaryLine = formatPrimaryLine(item);
   const doneCallout = formatDoneCallout(item);
-  const banner = getMetaBanner(item.metadata);
+  const banner = getMetaBanner(item.metadata, item.completed);
 
   return (
     <Box borderStyle={borderStyle} borderColor={borderColor} paddingX={1} flexDirection="column" marginBottom={0}>
@@ -26,7 +26,7 @@ const TaskCardComponent = ({ item, selected }: TaskCardProps) => {
       {item.contexts.length > 0 ? <Text color="magenta">contexts: {formatContexts(item.contexts)}</Text> : null}
       {item.metadata.length > 0 ? (
         <Text>
-          <Text color="cyan">meta:</Text> {renderColoredMeta(item.metadata)}
+          <Text color="cyan">meta:</Text> {renderColoredMeta(item.metadata, item.completed)}
         </Text>
       ) : null}
       {banner != null ? <Text color={banner.color}>{banner.text}</Text> : null}

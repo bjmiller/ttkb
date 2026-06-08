@@ -45,8 +45,8 @@ export const getDueDateColor = (value: string): string => {
   return DUE_DATE_COLORS[getDueDateStatus(value)];
 };
 
-const getTagColor = (tag: TodoItem['metadata'][number]): string => {
-  if (tag.key === 'due') {
+const getTagColor = (tag: TodoItem['metadata'][number], completed = false): string => {
+  if (tag.key === 'due' && !completed) {
     return getDueDateColor(tag.value);
   }
   if (tag.key === 'pri') {
@@ -73,16 +73,23 @@ const sortMetadataTags = (metadata: TodoItem['metadata']): TodoItem['metadata'][
   return [...due, ...rest];
 };
 
-export const renderColoredMeta = (metadata: TodoItem['metadata']): React.ReactNode => {
+export const renderColoredMeta = (metadata: TodoItem['metadata'], completed = false): React.ReactNode => {
   const sorted = sortMetadataTags(metadata);
   return sorted.map((tag, i) => (
-    <Text key={`${tag.key}:${tag.value}`} color={getTagColor(tag)}>
+    <Text key={`${tag.key}:${tag.value}`} color={getTagColor(tag, completed)}>
       {`${tag.key}:${tag.value}${i < sorted.length - 1 ? ' ' : ''}`}
     </Text>
   ));
 };
 
-export const getMetaBanner = (metadata: TodoItem['metadata']): { text: string; color: string } | null => {
+export const getMetaBanner = (
+  metadata: TodoItem['metadata'],
+  completed = false
+): { text: string; color: string } | null => {
+  if (completed) {
+    return null;
+  }
+
   const dueTag = metadata.find((tag) => tag.key === 'due');
   if (dueTag == null) {
     return null;

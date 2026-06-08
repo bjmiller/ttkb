@@ -50,7 +50,7 @@ export const getCardHeight = (task: DisplayTask, contentWidth: number): number =
     contentRows += getWrappedRowCount(`meta: ${formatMeta(task.item.metadata)}`, contentWidth);
   }
 
-  const banner = getMetaBanner(task.item.metadata);
+  const banner = getMetaBanner(task.item.metadata, task.item.completed);
   if (banner != null) {
     contentRows += getWrappedRowCount(banner.text, contentWidth);
   }

@@ -203,7 +203,7 @@ const renderRowText = (row: TableRow, widths: TableColumnWidths): React.ReactNod
     ? ' '.repeat(Math.max(0, widths.meta - values.meta.length))
     : formatCell(values.meta, widths.meta);
 
-  const banner = row.task.kind === 'todo' ? getMetaBanner(row.task.item.metadata) : null;
+  const banner = row.task.kind === 'todo' ? getMetaBanner(row.task.item.metadata, row.task.item.completed) : null;
   const description = banner != null ? `${values.description} ${banner.text}` : values.description;
 
   return (
@@ -212,7 +212,7 @@ const renderRowText = (row: TableRow, widths: TableColumnWidths): React.ReactNod
       <Text color="magenta">{context}</Text> │{' '}
       {hasMeta ? (
         <>
-          {renderColoredMeta(metadata)}
+          {renderColoredMeta(metadata, row.task.kind === 'todo' && row.task.item.completed)}
           {metaPadding}
         </>
       ) : (
