@@ -22,13 +22,7 @@ const compareTodoItems = (left: TodoItem, right: TodoItem): number => {
     return leftPriorityRank - rightPriorityRank;
   }
 
-  const leftCreation = left.creationDate ?? '0000-00-00';
-  const rightCreation = right.creationDate ?? '0000-00-00';
-  if (leftCreation !== rightCreation) {
-    return rightCreation.localeCompare(leftCreation);
-  }
-
-  return left.description.localeCompare(right.description);
+  return left.raw.localeCompare(right.raw);
 };
 
 export const buildColumns = (items: TodoItem[], errors: UnparseableTodoItem[], filter: string | undefined): Columns => {

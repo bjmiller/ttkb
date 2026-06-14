@@ -45,7 +45,7 @@ describe('buildColumns', () => {
     expect(columns.done).toHaveLength(1);
   });
 
-  it('sorts by priority asc, creation desc, description asc', () => {
+  it('sorts by priority asc, then raw ascending (oldest first)', () => {
     const items: TodoItem[] = [
       todo({
         lineNumber: 1,
@@ -81,7 +81,7 @@ describe('buildColumns', () => {
       entry.kind === 'todo' ? entry.item.description : entry.item.raw
     );
 
-    expect(backlogDescriptions).toEqual(['beta', 'alpha', 'zeta', 'no-priority']);
+    expect(backlogDescriptions).toEqual(['alpha', 'beta', 'zeta', 'no-priority']);
   });
 
   it('filters by raw line and keeps unparseable items in backlog', () => {
